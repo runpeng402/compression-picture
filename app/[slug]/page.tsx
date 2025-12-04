@@ -1,6 +1,11 @@
-// 使用 @/components 别名，这是 Next.js 的标准
-import ImageCompressorTool from '@/components/ImageCompressorTool';
 import { Metadata } from 'next';
+import dynamic from 'next/dynamic';
+
+// 同样，把组件改成动态加载，并关闭 SSR
+const ImageCompressorTool = dynamic(
+  () => import('@/components/ImageCompressorTool'),
+  { ssr: false }
+);
 
 export function generateStaticParams() {
   const sizesKB = [10, 15, 20, 30, 40, 50, 60, 80, 100, 200, 300, 500];
