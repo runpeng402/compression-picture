@@ -1,0 +1,4 @@
+User-Agent: *
+Allow: /
+
+Sitemap: https://exactsize.com/sitemap.xml
