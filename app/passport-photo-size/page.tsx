@@ -29,7 +29,7 @@ export default function PassportPhotoSizePage() {
     <ImageCompressorTool
       // 👇 这里控制默认护照照片大小，240 表示默认 240KB
       // 如果你更想用 200KB，改成 "200" 即可
-      initialTargetSize="240"
+      initialTargetSize="200"
       titleOverride="Passport Photo Size"
     />
   );
