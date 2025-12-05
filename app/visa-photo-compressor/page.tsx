@@ -7,14 +7,51 @@ const ImageCompressorTool = dynamic(
 );
 
 export const metadata: Metadata = {
-  title: "Visa Photo Compressor – Reduce Image for Visa Applications",
+  title: "Visa Photo Compressor – Prepare Photos for Online Visa Applications",
   description:
-    "Compress your visa photo to the exact required size for DS-160, Schengen, Canada, Australia, and other visa systems.",
+    "Compress visa photos to meet digital upload requirements for U.S. DS-160, Schengen, Canada, Australia, UK, and more.",
+};
+
+const FAQ = [
+  {
+    q: "What is the required size for a visa photo?",
+    a: "Most visa systems require photo sizes between 50KB and 240KB depending on the country.",
+  },
+  {
+    q: "Why does the visa system reject my photo?",
+    a: "Common reasons include excessive file size, incorrect dimensions, or low clarity.",
+  },
+  {
+    q: "Is 100KB a good size for visa photos?",
+    a: "Yes. 100KB is accepted by most global visa platforms and retains good clarity.",
+  },
+  {
+    q: "Does compression affect facial recognition?",
+    a: "No. This compressor maintains essential facial detail needed for biometric checks.",
+  },
+];
+
+const FAQ_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
 };
 
 export default function VisaPhotoCompressorPage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
+      />
+
       <ImageCompressorTool
         initialTargetSize="100"
         titleOverride="Visa Photo Compressor"
@@ -22,57 +59,26 @@ export default function VisaPhotoCompressorPage() {
 
       <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-12 mt-6 text-sm text-slate-600 space-y-4">
         <h2 className="text-lg font-semibold text-slate-800">
-          Why compress a visa photo?
+          Why compress visa photos?
         </h2>
-
         <p>
-          Visa application systems often enforce strict file-size restrictions
-          for photo uploads. For example, the U.S. DS-160 system requires images
-          under 240KB, while other countries may limit photos to 100KB or less.
-        </p>
-
-        <p>
-          This visa photo compressor allows you to set an exact target size
-          (such as 100KB) and generate a perfectly optimized image suitable for
-          digital visa submissions.
+          Visa platforms often enforce strict upload limits. Compressing your photo prevents
+          upload failures and ensures smooth application processing.
         </p>
 
         <h3 className="text-base font-semibold text-slate-800 mt-4">
-          Supported visa systems
+          Frequently Asked Questions
         </h3>
 
-        <ul className="list-disc list-inside space-y-1">
-          <li>U.S. DS-160 (under 240KB)</li>
-          <li>Schengen visa portals</li>
-          <li>Canadian eVisa systems</li>
-          <li>Australia immigration uploads</li>
-          <li>UK visa & identity submission portals</li>
+        <ul className="list-disc list-inside space-y-2">
+          {FAQ.map((item, i) => (
+            <li key={i}>
+              <strong>{item.q}</strong>
+              <br />
+              {item.a}
+            </li>
+          ))}
         </ul>
-
-        <p>
-          If your image is too large, the system may reject your application.
-          Compressing your visa photo ensures a smooth submission process.
-        </p>
-
-        <h3 className="text-base font-semibold text-slate-800 mt-4">
-          How does this visa photo compressor work?
-        </h3>
-
-        <p>
-          Our compressor intelligently reduces file size by:
-        </p>
-
-        <ol className="list-decimal list-inside space-y-1">
-          <li>Adjusting compression levels dynamically</li>
-          <li>Resizing dimensions only when necessary</li>
-          <li>Preserving facial detail required for biometric recognition</li>
-          <li>Running fully client-side for privacy and speed</li>
-        </ol>
-
-        <p>
-          Upload your visa photo above and select a target size. A perfectly
-          optimized version will be ready for download immediately.
-        </p>
       </section>
     </>
   );
