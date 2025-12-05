@@ -1,35 +1,79 @@
-// app/visa-photo-compressor/page.tsx
 import { Metadata } from "next";
 import dynamic from "next/dynamic";
 
-// 动态引入主工具组件（关闭 SSR，避免 browser-image-compression 报错）
 const ImageCompressorTool = dynamic(
   () => import("@/components/ImageCompressorTool"),
   { ssr: false }
 );
 
-// ✅ SEO：签证照片压缩页 Meta
 export const metadata: Metadata = {
-  title: "Visa Photo Compressor – Compress Visa Photo to Exact Size Online",
+  title: "Visa Photo Compressor – Reduce Image for Visa Applications",
   description:
-    "Free online visa photo compressor. Upload your visa photo (JPG or PNG) and compress it to the exact KB size required by embassies or consulates.",
-  openGraph: {
-    title: "Visa Photo Compressor – Compress Visa Photo to Exact Size Online",
-    description:
-      "Compress your visa photo to the exact KB size required. Perfect for online visa applications and embassy photo requirements.",
-    url: "https://compresstokb.com/visa-photo-compressor",
-    siteName: "ExactSize",
-    type: "website",
-  },
+    "Compress your visa photo to the exact required size for DS-160, Schengen, Canada, Australia, and other visa systems.",
 };
 
-// ✅ 页面组件
 export default function VisaPhotoCompressorPage() {
   return (
-    <ImageCompressorTool
-      // 👇 这里就是默认值，改成 "200" 就是 200KB
-      initialTargetSize="200"
-      titleOverride="Visa Photo Compressor"
-    />
+    <>
+      <ImageCompressorTool
+        initialTargetSize="100"
+        titleOverride="Visa Photo Compressor"
+      />
+
+      <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-12 mt-6 text-sm text-slate-600 space-y-4">
+        <h2 className="text-lg font-semibold text-slate-800">
+          Why compress a visa photo?
+        </h2>
+
+        <p>
+          Visa application systems often enforce strict file-size restrictions
+          for photo uploads. For example, the U.S. DS-160 system requires images
+          under 240KB, while other countries may limit photos to 100KB or less.
+        </p>
+
+        <p>
+          This visa photo compressor allows you to set an exact target size
+          (such as 100KB) and generate a perfectly optimized image suitable for
+          digital visa submissions.
+        </p>
+
+        <h3 className="text-base font-semibold text-slate-800 mt-4">
+          Supported visa systems
+        </h3>
+
+        <ul className="list-disc list-inside space-y-1">
+          <li>U.S. DS-160 (under 240KB)</li>
+          <li>Schengen visa portals</li>
+          <li>Canadian eVisa systems</li>
+          <li>Australia immigration uploads</li>
+          <li>UK visa & identity submission portals</li>
+        </ul>
+
+        <p>
+          If your image is too large, the system may reject your application.
+          Compressing your visa photo ensures a smooth submission process.
+        </p>
+
+        <h3 className="text-base font-semibold text-slate-800 mt-4">
+          How does this visa photo compressor work?
+        </h3>
+
+        <p>
+          Our compressor intelligently reduces file size by:
+        </p>
+
+        <ol className="list-decimal list-inside space-y-1">
+          <li>Adjusting compression levels dynamically</li>
+          <li>Resizing dimensions only when necessary</li>
+          <li>Preserving facial detail required for biometric recognition</li>
+          <li>Running fully client-side for privacy and speed</li>
+        </ol>
+
+        <p>
+          Upload your visa photo above and select a target size. A perfectly
+          optimized version will be ready for download immediately.
+        </p>
+      </section>
+    </>
   );
 }
