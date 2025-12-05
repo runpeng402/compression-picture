@@ -1,59 +1,87 @@
-import { Metadata } from 'next';
-import dynamic from 'next/dynamic';
+// app/[slug]/page.tsx
 
-// 同样，把组件改成动态加载，并关闭 SSR
+import { Metadata } from "next"
+import dynamic from "next/dynamic"
+import { getSeoPageConfig } from "@/lib/seoPages"
+
+// 动态加载压缩工具（关闭 SSR）
 const ImageCompressorTool = dynamic(
-  () => import('@/components/ImageCompressorTool'),
+  () => import("@/components/ImageCompressorTool"),
   { ssr: false }
-);
+)
 
-export function generateStaticParams() {
-  const sizesKB = [10, 15, 20, 30, 40, 50, 60, 80, 100, 200, 300, 500];
-  const sizesMB = [1, 2];
-
-  const kbPaths = sizesKB.map((size) => ({ slug: `compress-to-${size}kb` }));
-  const mbPaths = sizesMB.map((size) => ({ slug: `compress-to-${size}mb` }));
-  const formatPaths = [
-    { slug: 'jpg-to-50kb' },
-    { slug: 'png-to-50kb' },
-    { slug: 'passport-photo-size' },
-    { slug: 'visa-photo-compressor' },
-  ];
-
-  return [...kbPaths, ...mbPaths, ...formatPaths];
+type PageProps = {
+  params: {
+    slug: string
+  }
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const slug = params.slug;
-  const humanReadableSlug = slug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
-  
-  return {
-    title: `${humanReadableSlug} - ExactSize Free Tool`,
-    description: `Free online tool to ${humanReadableSlug.toLowerCase()}. Reduce image size to exactly ${slug.replace(/\D/g, '')}KB/MB without uploading to server.`,
-  };
-}
+// 统一用配置生成每个专题页的 <title> / <meta description>
+export async function generateMetadata(
+  { params }: PageProps
+): Promise<Metadata> {
+  const seo = getSeoPageConfig(params.slug)
 
-export default function DynamicCompressPage({ params }: { params: { slug: string } }) {
-  const slug = params.slug;
-  const match = slug.match(/(\d+)(kb|mb)/i);
-  
-  let initialSize = "";
-  let titleOverride = "Compress Image to Exact Size";
-
-  if (match) {
-    const number = parseInt(match[1]);
-    const unit = match[2].toLowerCase();
-    if (unit === 'mb') {
-      initialSize = (number * 1024).toString();
-      titleOverride = `Compress Image to ${number}MB`;
-    } else {
-      initialSize = number.toString();
-      titleOverride = `Compress Image to ${number}KB`;
+  if (!seo) {
+    // 兜底：非专题 slug，走通用的
+    return {
+      title: "Compress Image to Exact Size – ExactSize Free Online Tool",
+      description:
+        "Free online tool to compress images to an exact file size in KB or MB. Supports JPG, PNG, WEBP. No signup, instant compression."
     }
-  } else if (slug.includes('passport') || slug.includes('visa')) {
-    initialSize = "200";
-    titleOverride = slug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   }
 
-  return <ImageCompressorTool initialTargetSize={initialSize} titleOverride={titleOverride} />;
+  return {
+    title: seo.title,
+    description: seo.description
+  }
+}
+
+export default function SlugPage({ params }: PageProps) {
+  const seo = getSeoPageConfig(params.slug)
+
+  // 决定默认目标大小
+  const initialTargetSize = seo?.defaultTargetSize ?? ""
+
+  // FAQ 结构化数据（只有配置了 faqs 的页面才注入）
+  const faqJsonLd =
+    seo && seo.faqs && seo.faqs.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: seo.faqs.map((item) => ({
+            "@type": "Question",
+            name: item.question,
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: item.answer
+            }
+          }))
+        }
+      : null
+
+  return (
+    <>
+      {/* FAQ Schema：只对 4 个专题页生效，帮助 Google 出“常见问题”的富结果 */}
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
+
+      {/* 主工具：标题用 h1 配置，targetSize 用 defaultTargetSize 配置 */}
+      <ImageCompressorTool
+        initialTargetSize={initialTargetSize}
+        titleOverride={seo?.h1 ?? "Compress Image to Exact Size"}
+      />
+
+      {/* 可选：在工具后面追加一小段介绍文案，增强页面正文里的关键词密度 */}
+      {seo && (
+        <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-10 mt-4 text-sm text-slate-600">
+          <p>{seo.intro}</p>
+        </section>
+      )}
+    </>
+  )
 }
