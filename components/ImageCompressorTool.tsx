@@ -215,6 +215,29 @@ export default function ImageCompressorTool({ initialTargetSize = "", titleOverr
     { icon: ShieldIcon, title: "100% Private", desc: "Files never leave your browser" },
     { icon: DownloadIcon, title: "Instant Download", desc: "No waiting, no signup" },
   ]
+
+  // ✅ Popular 区域统一配置（方便扩展 & SEO）
+  const POPULAR_SIZES_KB = [10, 15, 20, 30, 40, 50, 60, 80, 100, 150, 200, 300, 400, 500, 600, 800, 900]
+  const POPULAR_SIZES_MB = [1, 2, 5, 10]
+
+  const popularSizeLinks = [
+    ...POPULAR_SIZES_KB.map((size) => ({
+      label: `${size}KB`,
+      href: `/compress-to-${size}kb`,
+    })),
+    ...POPULAR_SIZES_MB.map((size) => ({
+      label: `${size}MB`,
+      href: `/compress-to-${size}mb`,
+    })),
+  ]
+
+  const popularFormatLinks = [
+    { label: "JPG to 50KB", href: "/jpg-to-50kb" },
+    { label: "PNG to 50KB", href: "/png-to-50kb" },
+    { label: "Passport Photo Size", href: "/passport-photo-size" },
+    { label: "Visa Photo Compressor", href: "/visa-photo-compressor" },
+  ]
+
   const canCompress = file && targetSize && status !== "compressing" && status !== "uploading"
 
   return (
@@ -336,16 +359,36 @@ export default function ImageCompressorTool({ initialTargetSize = "", titleOverr
           <div>
             <h3 className="text-sm font-medium text-slate-700 mb-3">Popular Sizes</h3>
             <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-sm">
-              {["10KB", "15KB", "20KB", "30KB", "40KB", "50KB", "60KB", "80KB", "100KB", "200KB", "500KB", "1MB"].map((size, index, arr) => (
-                  <span key={size} className="inline-flex items-center"><a href={`/compress-to-${size.toLowerCase()}`} className="text-blue-600 hover:text-blue-800 hover:underline transition-colors">{size}</a>{index < arr.length - 1 && <span className="text-slate-300 mx-1.5">|</span>}</span>
+              {popularSizeLinks.map((item, index) => (
+                <span key={item.href} className="inline-flex items-center">
+                  <a
+                    href={item.href}
+                    className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                  >
+                    {item.label}
+                  </a>
+                  {index < popularSizeLinks.length - 1 && (
+                    <span className="text-slate-300 mx-1.5">|</span>
+                  )}
+                </span>
               ))}
             </div>
           </div>
           <div>
             <h3 className="text-sm font-medium text-slate-700 mb-3">Popular Formats</h3>
             <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-sm">
-              {[{ label: "JPG to 50KB", href: "/jpg-to-50kb" }, { label: "PNG to 50KB", href: "/png-to-50kb" }, { label: "Passport Photo Size", href: "/passport-photo-size" }, { label: "Visa Photo Compressor", href: "/visa-photo-compressor" }].map((item, index, arr) => (
-                <span key={item.label} className="inline-flex items-center"><a href={item.href} className="text-blue-600 hover:text-blue-800 hover:underline transition-colors">{item.label}</a>{index < arr.length - 1 && <span className="text-slate-300 mx-1.5">|</span>}</span>
+              {popularFormatLinks.map((item, index) => (
+                <span key={item.href} className="inline-flex items-center">
+                  <a
+                    href={item.href}
+                    className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                  >
+                    {item.label}
+                  </a>
+                  {index < popularFormatLinks.length - 1 && (
+                    <span className="text-slate-300 mx-1.5">|</span>
+                  )}
+                </span>
               ))}
             </div>
           </div>

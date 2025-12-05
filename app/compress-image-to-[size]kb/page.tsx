@@ -1,40 +1,49 @@
 import { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 
-// ✅ 修正引用：使用 ImageCompressorTool
+// 动态加载压缩工具（关闭 SSR）
 const ImageCompressorTool = dynamic(
   () => import('@/components/ImageCompressorTool'),
   { ssr: false }
 );
 
-export function generateStaticParams() {
-  const sizesKB = [10, 15, 20, 30, 40, 50, 60, 80, 100, 200, 300, 500];
-  const sizesMB = [1, 2];
+// ✅ 统一维护所有要做静态页的 KB 长尾
+export const SIZES_KB = [
+  5, 8,                            // 超小体积
+  10, 15, 20, 30, 40, 50, 60, 70, 80, 90,
+  100, 150, 200, 250, 300, 400, 500,
+  600, 800, 900,
+  // 后面想再加可以继续往这个数组塞
+];
 
-  // 注意：因为你的文件夹叫 compress-image-to-[size]kb
-  // Next.js 会匹配 [size] 这个参数，而不是整个 slug
-  
-  const kbPaths = sizesKB.map((size) => ({ size: `${size}` }));
-  
-  // 对于 MB 单位，目前的文件结构可能无法完美匹配，我们先保证 KB 能用
-  // 为了简单起见，我们先返回 KB 的路径
-  return kbPaths;
+export function generateStaticParams() {
+  // 生成类似 { size: '10' } 的参数，用于 /compress-image-to-10kb 之类的路由
+  return SIZES_KB.map((size) => ({ size: String(size) }));
 }
 
-export async function generateMetadata({ params }: { params: { size: string } }): Promise<Metadata> {
+export async function generateMetadata(
+  { params }: { params: { size: string } }
+): Promise<Metadata> {
   const size = params.size;
+
   return {
-    title: `Compress Image to ${size}KB - ExactSize Free Tool`,
-    description: `Free online tool to compress image to exactly ${size}KB.`,
+    title: `Compress Image to ${size}KB Online – ExactSize JPG/PNG Tool`,
+    description: `Free online image compressor to make your JPG or PNG photo exactly ${size}KB. Perfect for forms, emails and online uploads.`,
   };
 }
 
-export default function DynamicCompressPage({ params }: { params: { size: string } }) {
+export default function DynamicCompressPage(
+  { params }: { params: { size: string } }
+) {
   const size = params.size;
-  
-  // 构造初始值
-  let initialSize = size;
-  let titleOverride = `Compress Image to ${size}KB`;
 
-  return <ImageCompressorTool initialTargetSize={initialSize} titleOverride={titleOverride} />;
+  const initialSize = size;
+  const titleOverride = `Compress Image to ${size}KB`;
+
+  return (
+    <ImageCompressorTool
+      initialTargetSize={initialSize}
+      titleOverride={titleOverride}
+    />
+  );
 }
