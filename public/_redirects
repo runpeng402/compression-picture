@@ -1,0 +1,6 @@
+# 1. 所有 HTTP 请求强制跳到 HTTPS
+http://*  https://:splat  301!
+
+# 2. 同时把 www 统一到裸域（可选，但推荐）
+http://www.compresstokb.com/*  https://compresstokb.com/:splat  301!
+https://www.compresstokb.com/* https://compresstokb.com/:splat  301!
