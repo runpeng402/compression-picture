@@ -1,12 +1,14 @@
-import { MetadataRoute } from 'next'
+// app/robots.ts
+import { MetadataRoute } from "next"
 
 export default function robots(): MetadataRoute.Robots {
+  const baseUrl = "https://compresstokb.com"
+
   return {
     rules: {
-      userAgent: '*',
-      allow: '/',
+      userAgent: "*",
+      allow: "/",
     },
-    // ⚠️ 上线后记得把这里换成你的真实域名
-    sitemap: 'https://compresstokb.com/sitemap.xml',
+    sitemap: `${baseUrl}/sitemap.xml`,
   }
 }
