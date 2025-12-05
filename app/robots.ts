@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
     },
     // ⚠️ 上线后记得把这里换成你的真实域名
-    sitemap: 'https://exactsize.com/sitemap.xml',
+    sitemap: 'https://compresstokb.com/sitemap.xml',
   }
 }
