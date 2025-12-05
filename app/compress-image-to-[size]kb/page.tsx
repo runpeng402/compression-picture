@@ -1,40 +1,43 @@
-import { Metadata } from 'next';
-import dynamic from 'next/dynamic';
+// app/compress-image-to-[size]kb/page.tsx
+
+import { Metadata } from "next";
+import dynamic from "next/dynamic";
+import { SIZES_KB } from "@/lib/compressionSizes";
 
 // 动态加载压缩工具（关闭 SSR）
 const ImageCompressorTool = dynamic(
-  () => import('@/components/ImageCompressorTool'),
+  () => import("@/components/ImageCompressorTool"),
   { ssr: false }
 );
 
-// ✅ 统一维护所有要做静态页的 KB 长尾
-export const SIZES_KB = [
-  5, 8,                            // 超小体积
-  10, 15, 20, 30, 40, 50, 60, 70, 80, 90,
-  100, 150, 200, 250, 300, 400, 500,
-  600, 800, 900,
-  // 后面想再加可以继续往这个数组塞
-];
-
+// ✅ 使用统一的 KB 尺寸数组，生成静态路径
+// /compress-image-to-10kb 里的 [size] = "10"
 export function generateStaticParams() {
-  // 生成类似 { size: '10' } 的参数，用于 /compress-image-to-10kb 之类的路由
-  return SIZES_KB.map((size) => ({ size: String(size) }));
+  return SIZES_KB.map((size) => ({
+    size: String(size),
+  }));
 }
 
-export async function generateMetadata(
-  { params }: { params: { size: string } }
-): Promise<Metadata> {
+// ✅ 为每个长尾页生成独立的 meta
+export async function generateMetadata({
+  params,
+}: {
+  params: { size: string };
+}): Promise<Metadata> {
   const size = params.size;
 
   return {
-    title: `Compress Image to ${size}KB Online – ExactSize JPG/PNG Tool`,
-    description: `Free online image compressor to make your JPG or PNG photo exactly ${size}KB. Perfect for forms, emails and online uploads.`,
+    title: `Compress Image to ${size}KB Online | ExactSize JPG/PNG Tool`,
+    description: `Free online image compressor to make your JPG or PNG photo exactly ${size}KB. Perfect for forms, email attachments, and web uploads.`,
   };
 }
 
-export default function DynamicCompressPage(
-  { params }: { params: { size: string } }
-) {
+// ✅ 页面组件
+export default function DynamicCompressPage({
+  params,
+}: {
+  params: { size: string };
+}) {
   const size = params.size;
 
   const initialSize = size;
