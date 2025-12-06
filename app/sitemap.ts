@@ -1,23 +1,48 @@
 import { MetadataRoute } from "next";
 
-// 你已有的 KB 长尾词数组（可以和 compressionSizes.ts 共用）
+// 和站内实际支持的精确尺寸保持一致（KB 为单位）
 const SIZES_KB = [
-  5, 8, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90,
-  100, 150, 200, 250, 300, 400, 500, 600, 800, 900
+  5,
+  8,
+  10,
+  15,
+  20,
+  30,
+  40,
+  50,
+  60,
+  70,
+  80,
+  90,
+  100,
+  150,
+  200,
+  250,
+  300,
+  400,
+  500,
+  600,
+  800,
+  900,
+  // 以下是 MB 对应的 KB：1MB、2MB、5MB、10MB
+  1024,   // 1MB
+  2048,   // 2MB
+  5120,   // 5MB
+  10240,  // 10MB
 ];
 
 const SPECIAL_PAGES = [
   "jpg-to-50kb",
   "png-to-50kb",
   "passport-photo-size",
-  "visa-photo-compressor"
+  "visa-photo-compressor",
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://compresstokb.com";
 
-  // KB pages
-  const kbPages = SIZES_KB.map((size) => ({
+  // 精确 KB / MB 页面
+  const kbPages: MetadataRoute.Sitemap = SIZES_KB.map((size) => ({
     url: `${baseUrl}/compress-to-${size}kb`,
     lastModified: new Date(),
     changeFrequency: "weekly",
@@ -25,7 +50,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   // 专题页（SEO 非常重要）
-  const specialPages = SPECIAL_PAGES.map((slug) => ({
+  const specialPages: MetadataRoute.Sitemap = SPECIAL_PAGES.map((slug) => ({
     url: `${baseUrl}/${slug}`,
     lastModified: new Date(),
     changeFrequency: "monthly",

@@ -408,6 +408,44 @@ export default function ImageCompressorTool({
     },
   ]
 
+  // 👉 这里是首页 & 各工具页底部的热门尺寸链接（完整版本）
+  const popularSizeLinks = [
+    { label: "5KB", href: "/compress-to-5kb" },
+    { label: "8KB", href: "/compress-to-8kb" },
+    { label: "10KB", href: "/compress-to-10kb" },
+    { label: "15KB", href: "/compress-to-15kb" },
+    { label: "20KB", href: "/compress-to-20kb" },
+    { label: "30KB", href: "/compress-to-30kb" },
+    { label: "40KB", href: "/compress-to-40kb" },
+    { label: "50KB", href: "/compress-to-50kb" },
+    { label: "60KB", href: "/compress-to-60kb" },
+    { label: "70KB", href: "/compress-to-70kb" },
+    { label: "80KB", href: "/compress-to-80kb" },
+    { label: "90KB", href: "/compress-to-90kb" },
+    { label: "100KB", href: "/compress-to-100kb" },
+    { label: "150KB", href: "/compress-to-150kb" },
+    { label: "200KB", href: "/compress-to-200kb" },
+    { label: "250KB", href: "/compress-to-250kb" },
+    { label: "300KB", href: "/compress-to-300kb" },
+    { label: "400KB", href: "/compress-to-400kb" },
+    { label: "500KB", href: "/compress-to-500kb" },
+    { label: "600KB", href: "/compress-to-600kb" },
+    { label: "800KB", href: "/compress-to-800kb" },
+    { label: "900KB", href: "/compress-to-900kb" },
+    // MB 用 KB 路由：1MB=1024KB, 2MB=2048KB, 5MB=5120KB, 10MB=10240KB
+    { label: "1MB", href: "/compress-to-1024kb" },
+    { label: "2MB", href: "/compress-to-2048kb" },
+    { label: "5MB", href: "/compress-to-5120kb" },
+    { label: "10MB", href: "/compress-to-10240kb" },
+  ]
+
+  const popularFormatLinks = [
+    { label: "JPG to 50KB", href: "/jpg-to-50kb" },
+    { label: "PNG to 50KB", href: "/png-to-50kb" },
+    { label: "Passport Photo Size", href: "/passport-photo-size" },
+    { label: "Visa Photo Compressor", href: "/visa-photo-compressor" },
+  ]
+
   const canCompress =
     file && targetSize && status !== "compressing" && status !== "uploading"
 
@@ -437,7 +475,9 @@ export default function ImageCompressorTool({
             {titleOverride || "Compress Images to Exact Size (KB or MB)"}
           </h1>
           <p className="text-slate-500 text-sm sm:text-base max-w-md mx-auto">
-            Precise image compression powered by PixSize — reduce any image to an exact file size in KB or MB while keeping it clear and usable for passports, forms, job portals and more.
+            Precise image compression powered by PixSize — reduce any image to an
+            exact file size in KB or MB while keeping it clear and usable for
+            passports, forms, job portals and more.
           </p>
         </div>
 
@@ -670,6 +710,7 @@ export default function ImageCompressorTool({
         </div>
       </main>
 
+      {/* Popular Compressions 区块（全站共用） */}
       <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-12">
         <h2 className="text-lg font-semibold text-slate-800 mb-6">
           Popular Compressions
@@ -677,33 +718,18 @@ export default function ImageCompressorTool({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
           <div>
             <h3 className="text-sm font-medium text-slate-700 mb-3">
-              Popular Sizes
+              Popular Sizes (Exact KB / MB)
             </h3>
             <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-sm">
-              {[
-                "10KB",
-                "15KB",
-                "20KB",
-                "30KB",
-                "40KB",
-                "50KB",
-                "60KB",
-                "80KB",
-                "100KB",
-                "200KB",
-                "500KB",
-                "1MB",
-                "2MB",
-                "5MB",
-              ].map((size, index, arr) => (
-                <span key={size} className="inline-flex items-center">
+              {popularSizeLinks.map((item, index) => (
+                <span key={item.label} className="inline-flex items-center">
                   <a
-                    href={`/compress-to-${size.toLowerCase()}`}
+                    href={item.href}
                     className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
                   >
-                    {size}
+                    {item.label}
                   </a>
-                  {index < arr.length - 1 && (
+                  {index < popularSizeLinks.length - 1 && (
                     <span className="text-slate-300 mx-1.5">|</span>
                   )}
                 </span>
@@ -716,12 +742,7 @@ export default function ImageCompressorTool({
               Popular Formats
             </h3>
             <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-sm">
-              {[
-                { label: "JPG to 50KB", href: "/jpg-to-50kb" },
-                { label: "PNG to 50KB", href: "/png-to-50kb" },
-                { label: "Passport Photo Size", href: "/passport-photo-size" },
-                { label: "Visa Photo Compressor", href: "/visa-photo-compressor" },
-              ].map((item, index, arr) => (
+              {popularFormatLinks.map((item, index) => (
                 <span key={item.label} className="inline-flex items-center">
                   <a
                     href={item.href}
@@ -729,7 +750,7 @@ export default function ImageCompressorTool({
                   >
                     {item.label}
                   </a>
-                  {index < arr.length - 1 && (
+                  {index < popularFormatLinks.length - 1 && (
                     <span className="text-slate-300 mx-1.5">|</span>
                   )}
                 </span>
