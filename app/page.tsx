@@ -14,20 +14,19 @@ export const metadata: Metadata = {
   title:
     "PixSize – Compress Images to Exact Size (KB or MB) | Exact Size Image Compressor",
   description:
-    "PixSize is a lightweight online image compressor that lets you reduce JPG or PNG to an exact file size in KB or MB. Ideal for passports, visa photos, job portals, online forms, and email attachments.",
+    "PixSize is a free online image compressor that lets you reduce JPG or PNG images to an exact file size in KB or MB. Perfect for passports, visa systems, job portals, and online forms that require strict file size limits.",
   alternates: {
     canonical: "https://compresstokb.com",
   },
   openGraph: {
-    title:
-      "PixSize – Exact Size Image Compressor | Compress Images to Exact KB or MB",
+    title: "PixSize – Compress Images to Exact Size (KB or MB)",
     description:
-      "Compress your images to an exact size in KB or MB with PixSize, built on the ExactSize engine. 100% browser-based, fast, and private.",
+      "Precise image compression powered by PixSize and the ExactSize engine – reduce any image to an exact file size while keeping it clear and usable for passports, forms, job portals and more.",
     url: "https://compresstokb.com",
     type: "website",
     images: [
       {
-        url: "https://compresstokb.com/api/og?title=PixSize&subtitle=Exact+Size+Image+Compressor&size=Online+Tool",
+        url: "https://compresstokb.com/api/og?title=PixSize&subtitle=Exact+Size+Image+Compressor&size=Free+Online+Tool",
         width: 1200,
         height: 630,
       },
@@ -35,50 +34,35 @@ export const metadata: Metadata = {
   },
 };
 
-// -------------------------------
-// Popular 链接（含 10MB）
-// -------------------------------
-const POPULAR_SIZE_LINKS = [
-  { label: "5KB", href: "/compress-to-5kb" },
-  { label: "8KB", href: "/compress-to-8kb" },
-  { label: "10KB", href: "/compress-to-10kb" },
-  { label: "15KB", href: "/compress-to-15kb" },
-  { label: "20KB", href: "/compress-to-20kb" },
-  { label: "30KB", href: "/compress-to-30kb" },
-  { label: "40KB", href: "/compress-to-40kb" },
-  { label: "50KB", href: "/compress-to-50kb" },
-  { label: "60KB", href: "/compress-to-60kb" },
-  { label: "70KB", href: "/compress-to-70kb" },
-  { label: "80KB", href: "/compress-to-80kb" },
-  { label: "90KB", href: "/compress-to-90kb" },
-  { label: "100KB", href: "/compress-to-100kb" },
-  { label: "150KB", href: "/compress-to-150kb" },
-  { label: "200KB", href: "/compress-to-200kb" },
-  { label: "250KB", href: "/compress-to-250kb" },
-  { label: "300KB", href: "/compress-to-300kb" },
-  { label: "400KB", href: "/compress-to-400kb" },
-  { label: "500KB", href: "/compress-to-500kb" },
-  { label: "600KB", href: "/compress-to-600kb" },
-  { label: "800KB", href: "/compress-to-800kb" },
-  { label: "900KB", href: "/compress-to-900kb" },
-  { label: "1MB", href: "/compress-to-1mb" },
-  { label: "2MB", href: "/compress-to-2mb" },
-  { label: "5MB", href: "/compress-to-5mb" },
-  { label: "10MB", href: "/compress-to-10mb" },
-];
-
-const FORMATS = [
-  { label: "JPG to 50KB", href: "/jpg-to-50kb" },
-  { label: "PNG to 50KB", href: "/png-to-50kb" },
-  { label: "Passport Photo Size", href: "/passport-photo-size" },
-  { label: "Visa Photo Compressor", href: "/visa-photo-compressor" },
+// FAQ 内容（同时用于页面展示 & JSON-LD）
+const FAQ_ITEMS = [
+  {
+    q: "What is PixSize – Exact Size Image Compressor?",
+    a: "PixSize is a lightweight image compressor brand built on the ExactSize engine. It focuses on one thing only: helping you compress JPG or PNG images to an exact file size in KB or MB, instead of just giving you a rough smaller file.",
+  },
+  {
+    q: "When do I need an exact KB or MB file size?",
+    a: "Many online systems have strict file size limits such as 50KB, 100KB, 200KB or 500KB. Common examples include job portals, government forms, university applications, passport and visa photo uploads.",
+  },
+  {
+    q: "Will compressing to an exact size reduce image quality?",
+    a: "Some compression is necessary to hit an exact file size, but PixSize optimizes your image to balance quality and size. In most cases text remains readable and faces stay clear enough for identity verification.",
+  },
+  {
+    q: "Are my images uploaded to a server?",
+    a: "No. All compression is performed directly in your browser. Your images are not stored on a server, which means your passport photos, ID documents, and personal pictures stay on your own device.",
+  },
+  {
+    q: "Which formats does PixSize support?",
+    a: "PixSize currently supports JPG, JPEG, PNG and WebP files. You can set any exact target size in KB or MB, or use quick presets like 50KB, 100KB, 200KB and 1MB.",
+  },
 ];
 
 // -------------------------------
 // 首页渲染
 // -------------------------------
 export default function HomePage() {
-  const jsonLd = {
+  const jsonLdSite = {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "PixSize – Exact Size Image Compressor",
@@ -90,97 +74,87 @@ export default function HomePage() {
     },
   };
 
+  const jsonLdFaq = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ_ITEMS.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.a,
+      },
+    })),
+  };
+
   return (
     <>
-      {/* JSON-LD */}
+      {/* JSON-LD：站点信息 */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSite) }}
       />
 
-      {/* 主工具组件 */}
+      {/* JSON-LD：FAQ Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
+      />
+
+      {/* 主工具组件（内部会渲染 1 套 Popular Compressions） */}
       <ImageCompressorTool titleOverride="Compress Images to Exact Size" />
 
-      {/* ✅ 只保留这一套 Popular 区块（含 10MB） */}
-      <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-10">
-        <h2 className="text-lg font-semibold text-slate-800 mb-6">
-          Popular Compressions
-        </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
-          {/* Popular Sizes */}
-          <div>
-            <h3 className="text-sm font-medium text-slate-700 mb-3">
-              Popular Sizes (Exact KB / MB)
-            </h3>
-
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
-              {POPULAR_SIZE_LINKS.map((item, index) => (
-                <span key={item.href} className="inline-flex items-center">
-                  <a
-                    href={item.href}
-                    title={`Compress image to ${item.label}`}
-                    className="text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    {item.label}
-                  </a>
-                  {index < POPULAR_SIZE_LINKS.length - 1 && (
-                    <span className="text-slate-300 mx-1.5">|</span>
-                  )}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Popular Formats */}
-          <div>
-            <h3 className="text-sm font-medium text-slate-700 mb-3">
-              Popular Formats
-            </h3>
-
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
-              {FORMATS.map((item, index) => (
-                <span key={item.href} className="inline-flex items-center">
-                  <a
-                    href={item.href}
-                    title={item.label}
-                    className="text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    {item.label}
-                  </a>
-                  {index < FORMATS.length - 1 && (
-                    <span className="text-slate-300 mx-1.5">|</span>
-                  )}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PixSize 品牌介绍（保留 ExactSize 关键词） */}
-      <section className="max-w-4xl mx-auto w-full px-4 sm:px-6 pb-12">
+      {/* 品牌 + 长文 SEO 介绍 */}
+      <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-10 mt-10">
         <h2 className="text-lg font-semibold text-slate-800 mb-3">
           PixSize – Exact Size Image Compressor
         </h2>
-        <p className="text-sm text-slate-600 leading-relaxed mb-3">
-          PixSize is a lightweight image compressor brand built on the{" "}
-          <strong>ExactSize</strong> engine. It focuses on one thing only:
-          helping you compress JPG or PNG files to an{" "}
+        <p className="text-sm text-slate-600 mb-3">
+          <strong>PixSize</strong> is a lightweight image compressor brand built
+          on the <strong>ExactSize</strong> engine. It focuses on one thing
+          only: helping you compress JPG or PNG files to an{" "}
           <strong>exact file size in KB or MB</strong>, instead of just giving
           you a rough “smaller file”.
         </p>
-        <p className="text-sm text-slate-600 leading-relaxed mb-3">
+        <p className="text-sm text-slate-600 mb-3">
           This makes PixSize especially suitable for{" "}
           <strong>online forms, job portals, passport and visa systems</strong>,
           education portals, and government websites that strictly require a
-          maximum file size such as <strong>50KB, 100KB, 200KB, or 500KB</strong>.
+          maximum file size such as <strong>50KB, 100KB, 200KB, or 500KB</strong>
+          . You can also use it to prepare profile photos, ID document scans,
+          and attachments for email or messaging tools that enforce upload
+          limits.
         </p>
-        <p className="text-sm text-slate-600 leading-relaxed">
+        <p className="text-sm text-slate-600 mb-3">
+          Unlike traditional “compress image” tools that only provide a
+          percentage slider, PixSize lets you{" "}
+          <strong>set a precise target</strong> in KB or MB. The ExactSize
+          engine then automatically adjusts compression parameters and re-encodes
+          your image so that the final file size is as close as possible to your
+          target, while preserving visual clarity.
+        </p>
+        <p className="text-sm text-slate-600">
           All compression is performed in your browser. Your images are{" "}
           <strong>not stored on a server</strong>, which means your passport
-          photos, ID documents, and personal images stay on your own device.
+          photos, ID documents, and personal images stay on your own device. You
+          can use PixSize directly in the browser without registration, download
+          the result instantly, and repeat the process as many times as needed.
         </p>
+      </section>
+
+      {/* FAQ 文本（与 JSON-LD 对应） */}
+      <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-16">
+        <h2 className="text-lg font-semibold text-slate-800 mb-4">
+          Frequently Asked Questions about Exact Size Compression
+        </h2>
+        <div className="space-y-4 text-sm text-slate-600">
+          {FAQ_ITEMS.map((item, idx) => (
+            <div key={idx}>
+              <p className="font-medium text-slate-800">{item.q}</p>
+              <p className="mt-1">{item.a}</p>
+            </div>
+          ))}
+        </div>
       </section>
     </>
   );
