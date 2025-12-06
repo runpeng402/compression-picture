@@ -9,24 +9,24 @@ const ImageCompressorTool = dynamic(
 );
 
 // -------------------------------
-// 首页 SEO Metadata
+// 首页 SEO Metadata（已切换为 PixSize 品牌 + Exact Size 功能）
 // -------------------------------
 export const metadata: Metadata = {
-  title: "Compress Image to Exact Size (KB or MB) – Free Online Image Compressor",
+  title: "Compress Images to Exact Size (KB or MB) – PixSize",
   description:
-    "Free online image compression tool to reduce your JPG or PNG to an exact size in KB or MB. Perfect for forms, online submissions, passport photos, visa uploads, and email attachments.",
+    "PixSize is an online image compression tool that lets you compress images to an exact file size in KB or MB while preserving clarity. Perfect for forms, online submissions, passport photos, visa uploads, and email attachments.",
   alternates: {
     canonical: "https://compresstokb.com",
   },
   openGraph: {
-    title: "Compress Image to Exact Size – Free JPG/PNG Compressor | ExactSize",
+    title: "PixSize – Exact Size Image Compression",
     description:
-      "Reduce your image to an exact KB/MB size. 100% private. Fast and accurate online image compressor.",
+      "Compress images to precise sizes such as 20KB, 50KB, 100KB or 200KB using PixSize. Fast, free, and 100% private — all processing happens in your browser.",
     url: "https://compresstokb.com",
     type: "website",
     images: [
       {
-        url: "https://compresstokb.com/api/og?title=ExactSize&subtitle=Free+Image+Compressor&size=Online+Tool",
+        url: "https://compresstokb.com/api/og?title=PixSize&subtitle=Exact+Size+Image+Compressor&size=Online+Tool",
         width: 1200,
         height: 630,
       },
@@ -35,14 +35,14 @@ export const metadata: Metadata = {
 };
 
 // -------------------------------
-// 自动生成紧凑的内链列表
+// 自动生成紧凑的内链列表（保留不动，只是品牌 + 文案升级）
 // -------------------------------
 const POPULAR_SIZES = SIZES_KB.filter((n) => n <= 500).slice(0, 20); // 取前 20 个
 
 const POPULAR_SIZE_LINKS = POPULAR_SIZES.map((size) => ({
   label: `${size}KB`,
   href: `/compress-to-${size}kb`,
-  title: `Compress image to ${size}KB`,
+  title: `Compress image to ${size}KB with exact size control`,
 }));
 
 const FORMATS = [
@@ -59,7 +59,7 @@ export default function HomePage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "ExactSize Image Compressor",
+    name: "PixSize – Exact Size Image Compression",
     url: "https://compresstokb.com",
     potentialAction: {
       "@type": "SearchAction",
@@ -70,16 +70,16 @@ export default function HomePage() {
 
   return (
     <>
-      {/* JSON-LD */}
+      {/* JSON-LD（保留，加强网站实体信号） */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* 主工具组件 */}
-      <ImageCompressorTool titleOverride="Compress Image to Exact Size" />
+      {/* 主工具组件：这里内部已经用 PixSize 品牌 + Exact Size 文案 */}
+      <ImageCompressorTool titleOverride="Compress Images to Exact Size (KB or MB)" />
 
-      {/* 内链区块（增强 SEO） */}
+      {/* 内链区块（增强 SEO，保留原来的 Popular 区块） */}
       <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-10">
         <h2 className="text-lg font-semibold text-slate-800 mb-6">
           Popular Compressions
@@ -89,7 +89,7 @@ export default function HomePage() {
           {/* Popular Sizes */}
           <div>
             <h3 className="text-sm font-medium text-slate-700 mb-3">
-              Popular Sizes
+              Popular Sizes (Exact KB)
             </h3>
 
             <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
