@@ -20,7 +20,7 @@ export function generateStaticParams() {
 }
 
 // ------------------------------
-// 动态 Metadata（核心 SEO 强化）
+// 动态 Metadata（核心 SEO 强化：PixSize + Exact Size）
 // ------------------------------
 export async function generateMetadata({
   params,
@@ -29,8 +29,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const size = params.size;
 
-  const title = `Compress Image to ${size}KB – Exact JPG/PNG Compressor`;
-  const description = `Free online tool to compress JPG or PNG images to exactly ${size}KB. Perfect for forms, online submissions, passports, and visa uploads.`;
+  // Title 结构：关键词在前 + Exact Size 功能 + 品牌 PixSize
+  const title = `Compress Image to ${size}KB (Exact Size) – PixSize`;
+  const description = `PixSize is an online image compression tool that lets you compress JPG or PNG images to exactly ${size}KB while preserving clarity. Ideal for online forms, job portals, passports, and visa uploads that require strict file size limits.`;
 
   const url = `https://compresstokb.com/compress-to-${size}kb`;
 
@@ -47,7 +48,7 @@ export async function generateMetadata({
       type: "website",
       images: [
         {
-          url: `https://compresstokb.com/api/og?title=Compress+to+${size}KB&subtitle=Exact+Size+Image+Compressor&size=${size}KB`,
+          url: `https://compresstokb.com/api/og?title=Compress+to+${size}KB&subtitle=Exact+Size+Image+Compression&size=${size}KB`,
           width: 1200,
           height: 630,
         },
@@ -69,28 +70,28 @@ export default function DynamicCompressPage({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: `Compress Image to ${size}KB`,
+    name: `Compress Image to ${size}KB – PixSize`,
     url: `https://compresstokb.com/compress-to-${size}kb`,
-    description: `Online tool to compress an image to exactly ${size}KB.`,
+    description: `Use PixSize to compress an image to exactly ${size}KB. Precise, browser-based image compression for strict KB limits.`,
     potentialAction: {
       "@type": "Action",
-      name: "Compress Image",
+      name: "Compress Image to Exact Size",
       target: `https://compresstokb.com/compress-to-${size}kb`,
     },
   };
 
   return (
     <>
-      {/* JSON-LD 结构化数据 */}
+      {/* JSON-LD 结构化数据：保留 + 品牌注入 + Exact Size 语义 */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* 压缩工具渲染 */}
+      {/* 压缩工具渲染：继续用初始 size & 标题覆盖 */}
       <ImageCompressorTool
         initialTargetSize={size}
-        titleOverride={`Compress Image to ${size}KB`}
+        titleOverride={`Compress Image to ${size}KB (Exact Size)`}
       />
     </>
   );

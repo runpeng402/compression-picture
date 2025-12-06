@@ -8,21 +8,21 @@ const ImageCompressorTool = dynamic(
 );
 
 export const metadata: Metadata = {
-  title: "Visa Photo Compressor – Reduce Visa Photo to 200KB | ExactSize",
+  title: "Visa Photo Compressor (Exact 200KB) – PixSize",
   description:
-    "Compress visa photos to exactly 200KB. Works for U.S. DS-160, Schengen visa, Canada, Australia, UK, Singapore, India, and more.",
+    "Use PixSize to compress visa photos to an exact size of 200KB. Works for U.S. DS-160, Schengen visa, Canada, Australia, UK, Singapore, India and more online visa systems that require strict file size limits.",
   alternates: {
     canonical: "https://compresstokb.com/visa-photo-compressor",
   },
   openGraph: {
-    title: "Visa Photo Compressor – 200KB Online Tool",
+    title: "Visa Photo Compressor – Exact 200KB Online Tool | PixSize",
     description:
-      "Free online visa photo compressor to reduce images to 200KB instantly.",
+      "Free online visa photo compressor by PixSize to reduce images to exactly 200KB while preserving facial clarity. Ideal for DS-160, Schengen and other digital visa applications.",
     url: "https://compresstokb.com/visa-photo-compressor",
     type: "website",
     images: [
       {
-        url: "https://compresstokb.com/api/og?title=Visa+Photo&subtitle=200KB+Compressor&size=200KB",
+        url: "https://compresstokb.com/api/og?title=Visa+Photo&subtitle=Exact+200KB+Compressor&size=200KB",
         width: 1200,
         height: 630,
       },
@@ -37,19 +37,19 @@ export default function VisaPhotoPage() {
   const FAQ = [
     {
       q: "What is the required size for a visa photo?",
-      a: "Most visa systems recommend a file size between 100KB and 240KB, depending on the country.",
+      a: "Most online visa systems recommend a file size between 100KB and 240KB, depending on the country and platform. Many portals set a hard limit around 200KB.",
     },
     {
       q: "Why was my visa photo rejected?",
-      a: "Common reasons include large file size, wrong dimensions, or unclear facial details.",
+      a: "Common reasons include file size being too large, wrong dimensions, incorrect background, or unclear facial details that fail automated checks.",
     },
     {
       q: "Is 200KB safe for visa photo uploads?",
-      a: "Yes. 200KB works for U.S. visa (DS-160), Schengen, Canada, Australia, and many others.",
+      a: "Yes. 200KB works for many major visa systems, including U.S. DS-160, Schengen, Canada, Australia, UK, Singapore and others, providing a good balance of clarity and size.",
     },
     {
       q: "Will compression reduce biometric accuracy?",
-      a: "No. This tool compresses while keeping essential facial clarity required for verification.",
+      a: "PixSize compresses while aiming to keep essential facial detail intact, so your visa photo remains clear enough for biometric verification and manual review.",
     },
   ];
 
@@ -69,9 +69,10 @@ export default function VisaPhotoPage() {
   const jsonLdPage = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "Visa Photo Compressor (200KB)",
+    name: "Visa Photo Compressor (Exact 200KB) – PixSize",
     url: "https://compresstokb.com/visa-photo-compressor",
-    description: "Compress visa photos to exactly 200KB.",
+    description:
+      "Use PixSize to compress visa photos to exactly 200KB. Precise, browser-based image compression for digital visa applications.",
   };
 
   return (
@@ -88,10 +89,10 @@ export default function VisaPhotoPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
       />
 
-      {/* 工具主体 */}
+      {/* 工具主体：默认目标 200KB，标题强调 Exact Size */}
       <ImageCompressorTool
         initialTargetSize="200"
-        titleOverride="Visa Photo Compressor (200KB)"
+        titleOverride="Visa Photo Compressor (200KB Exact Size)"
       />
 
       {/* 页面 FAQ 内容 */}

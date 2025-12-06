@@ -8,21 +8,21 @@ const ImageCompressorTool = dynamic(
 );
 
 export const metadata: Metadata = {
-  title: "Passport Photo Size Compressor – Reduce Photo to 200KB | ExactSize",
+  title: "Passport Photo Size Compressor (Exact 200KB) – PixSize",
   description:
-    "Compress passport photos to exactly 200KB. Works for USA, China, India, UK, Canada, Australia, Singapore, and most international passport submission systems.",
+    "Use PixSize to compress passport photos to an exact size of 200KB. Works for USA, China, India, UK, Canada, Australia, Singapore, and most international online passport systems that require strict file size limits.",
   alternates: {
     canonical: "https://compresstokb.com/passport-photo-size",
   },
   openGraph: {
-    title: "Passport Photo Size Compressor – 200KB Online Tool",
+    title: "Passport Photo Size Compressor – Exact 200KB Image Tool | PixSize",
     description:
-      "Free online passport photo compressor to reduce images to 200KB instantly with preserved clarity.",
+      "Free online passport photo compressor by PixSize to reduce images to exactly 200KB while maintaining biometric clarity. Ideal for digital passport and ID photo uploads.",
     url: "https://compresstokb.com/passport-photo-size",
     type: "website",
     images: [
       {
-        url: "https://compresstokb.com/api/og?title=Passport+Photo&subtitle=200KB+Compressor&size=200KB",
+        url: "https://compresstokb.com/api/og?title=Passport+Photo&subtitle=Exact+200KB+Compressor&size=200KB",
         width: 1200,
         height: 630,
       },
@@ -37,19 +37,19 @@ export default function PassportPhotoPage() {
   const FAQ = [
     {
       q: "What is the required size for a digital passport photo?",
-      a: "Most countries require a digital passport photo between 100KB and 200KB for online submission.",
+      a: "Most countries require a digital passport photo between 100KB and 200KB for online submission. Some systems explicitly require a maximum of 200KB.",
     },
     {
-      q: "Why gets my passport photo rejected?",
-      a: "Common issues include oversized files, incorrect dimensions, or low facial clarity.",
+      q: "Why does my passport photo get rejected?",
+      a: "Common issues include oversized files, incorrect dimensions, low facial clarity, or failing biometric checks. Compressing to an exact KB size often helps meet upload rules.",
     },
     {
       q: "Is 200KB suitable for passport photo uploads?",
-      a: "Yes. 200KB is widely accepted by global passport systems including USA, UK, China, and Australia.",
+      a: "Yes. 200KB is widely accepted by many global passport systems, including those in the USA, UK, China, India, Canada and Australia, as a safe and clear size for biometric review.",
     },
     {
       q: "Will compression affect biometric recognition?",
-      a: "This tool maintains essential biometric clarity while reducing size.",
+      a: "PixSize aims to maintain essential biometric clarity while reducing file size, so your passport photo remains sharp enough for automated verification and manual review.",
     },
   ];
 
@@ -69,9 +69,10 @@ export default function PassportPhotoPage() {
   const jsonLdPage = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "Passport Photo Size Compressor",
+    name: "Passport Photo Size Compressor – PixSize",
     url: "https://compresstokb.com/passport-photo-size",
-    description: "Compress passport photos to exactly 200KB.",
+    description:
+      "Use PixSize to compress passport photos to exactly 200KB. Precise, browser-based image compression for digital passport and ID photo uploads.",
   };
 
   return (
@@ -88,10 +89,10 @@ export default function PassportPhotoPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
       />
 
-      {/* 工具主体 */}
+      {/* 工具主体：默认目标 200KB，标题强调 Exact Size */}
       <ImageCompressorTool
         initialTargetSize="200"
-        titleOverride="Passport Photo Size (200KB)"
+        titleOverride="Passport Photo Size Compressor (200KB Exact Size)"
       />
 
       {/* 页面 FAQ 文本 */}

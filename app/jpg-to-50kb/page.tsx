@@ -8,24 +8,24 @@ const ImageCompressorTool = dynamic(
 );
 
 // -----------------------
-// Metadata（专业增强版）
+// Metadata（PixSize + Exact Size 增强版）
 // -----------------------
 export const metadata: Metadata = {
-  title: "Compress JPG to 50KB – Free Online JPG Compressor | ExactSize",
+  title: "Compress JPG to 50KB (Exact Size) – PixSize",
   description:
-    "Compress JPG images to exactly 50KB using our fast, accurate, and secure online compressor. Ideal for job portals, resumes, school submissions, and systems requiring strict JPG size limits.",
+    "Use PixSize to compress JPG images to exactly 50KB. Fast, accurate and secure online JPG compressor, ideal for job portals, resumes, school submissions and systems that require strict 50KB JPG limits.",
   alternates: {
     canonical: "https://compresstokb.com/jpg-to-50kb",
   },
   openGraph: {
-    title: "Compress JPG to 50KB – Exact JPG Size Tool",
+    title: "Compress JPG to 50KB – Exact JPG Size Tool | PixSize",
     description:
-      "Free online JPG compressor to reduce JPG/JPEG images to exactly 50KB. High quality, private, and instant.",
+      "Free online JPG compressor by PixSize to reduce JPG/JPEG images to exactly 50KB while preserving clarity. Perfect for online forms, ATS systems and university portals.",
     url: "https://compresstokb.com/jpg-to-50kb",
     type: "website",
     images: [
       {
-        url: "https://compresstokb.com/api/og?title=JPG+to+50KB&subtitle=Exact+Size+Compressor&size=50KB",
+        url: "https://compresstokb.com/api/og?title=JPG+to+50KB&subtitle=Exact+Size+JPG+Compressor&size=50KB",
         width: 1200,
         height: 630,
       },
@@ -40,19 +40,19 @@ export default function JpgTo50kbPage() {
   const FAQ = [
     {
       q: "How do I compress a JPG to 50KB?",
-      a: "Simply upload your JPG image, enter 50KB as your target, and download the optimized output instantly.",
+      a: "Upload your JPG image, set 50KB as the target size, and then download the optimized file. PixSize automatically adjusts quality and resolution to hit as close as possible to 50KB.",
     },
     {
       q: "Why do job portals or online forms require 50KB JPG files?",
-      a: "Many application systems enforce a strict 50KB JPG limit to ensure fast uploads and compatibility with older verification systems.",
+      a: "Many job portals, HR systems and government forms enforce a strict 50KB JPG limit to ensure fast uploads, consistent storage and compatibility with older verification systems.",
     },
     {
       q: "Will compressing to 50KB reduce quality?",
-      a: "Some loss occurs, but this tool optimizes JPG images to maintain clarity while meeting the exact size requirement.",
+      a: "Some quality loss is inevitable at 50KB, but PixSize tries to preserve as much clarity as possible while meeting the exact size requirement, so your resume photo or document image remains readable.",
     },
     {
       q: "Is 50KB enough for resumes or profile photos?",
-      a: "Yes, 50KB JPG images are widely accepted by HR systems, ATS platforms, and university portals.",
+      a: "Yes. A 50KB JPG is widely accepted by HR systems, ATS platforms and university portals, and is usually sufficient for small profile photos, ID images or document scans.",
     },
   ];
 
@@ -72,10 +72,10 @@ export default function JpgTo50kbPage() {
   const jsonLdPage = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "Compress JPG to 50KB",
+    name: "Compress JPG to 50KB – PixSize",
     url: "https://compresstokb.com/jpg-to-50kb",
     description:
-      "Free online tool to compress JPG images to exactly 50KB for forms, uploads, and documents.",
+      "Free online tool by PixSize to compress JPG images to exactly 50KB for job portals, online forms and document uploads that require strict JPG size limits.",
   };
 
   return (
@@ -92,10 +92,10 @@ export default function JpgTo50kbPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
       />
 
-      {/* 工具主体 */}
+      {/* 工具主体：默认目标 50KB，标题强调 Exact Size */}
       <ImageCompressorTool
         initialTargetSize="50"
-        titleOverride="Compress JPG to 50KB"
+        titleOverride="Compress JPG to 50KB (Exact Size)"
       />
 
       {/* 页面 FAQ 文本内容（增强排名） */}

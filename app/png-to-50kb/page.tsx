@@ -1,4 +1,4 @@
-// app/jpg-to-50kb/page.tsx
+// app/png-to-50kb/page.tsx
 import { Metadata } from "next";
 import dynamic from "next/dynamic";
 
@@ -8,24 +8,24 @@ const ImageCompressorTool = dynamic(
 );
 
 // -----------------------
-// Metadata（专业增强版）
+// Metadata（PixSize + PNG 专项增强版）
 // -----------------------
 export const metadata: Metadata = {
-  title: "Compress JPG to 50KB – Free Online JPG Compressor | ExactSize",
+  title: "Compress PNG to 50KB (Exact Size) – PixSize",
   description:
-    "Compress JPG images to exactly 50KB using our fast, accurate, and secure online compressor. Ideal for job portals, resumes, school submissions, and systems requiring strict JPG size limits.",
+    "Use PixSize to compress PNG images to exactly 50KB. Ideal for web forms, UI icons, logos, transparent PNG uploads and systems that require strict PNG size limits.",
   alternates: {
-    canonical: "https://compresstokb.com/jpg-to-50kb",
+    canonical: "https://compresstokb.com/png-to-50kb",
   },
   openGraph: {
-    title: "Compress JPG to 50KB – Exact JPG Size Tool",
+    title: "Compress PNG to 50KB – Exact PNG Size Tool | PixSize",
     description:
-      "Free online JPG compressor to reduce JPG/JPEG images to exactly 50KB. High quality, private, and instant.",
-    url: "https://compresstokb.com/jpg-to-50kb",
+      "Free online PNG compressor by PixSize to reduce PNG images to exactly 50KB while keeping transparency and clarity whenever possible.",
+    url: "https://compresstokb.com/png-to-50kb",
     type: "website",
     images: [
       {
-        url: "https://compresstokb.com/api/og?title=JPG+to+50KB&subtitle=Exact+Size+Compressor&size=50KB",
+        url: "https://compresstokb.com/api/og?title=PNG+to+50KB&subtitle=Exact+Size+PNG+Compressor&size=50KB",
         width: 1200,
         height: 630,
       },
@@ -36,23 +36,23 @@ export const metadata: Metadata = {
 // -----------------------
 // 页面主体
 // -----------------------
-export default function JpgTo50kbPage() {
+export default function PngTo50kbPage() {
   const FAQ = [
     {
-      q: "How do I compress a JPG to 50KB?",
-      a: "Simply upload your JPG image, enter 50KB as your target, and download the optimized output instantly.",
+      q: "How do I compress a PNG to 50KB?",
+      a: "Upload your PNG image, set 50KB as the target size, and PixSize will automatically optimize the image so that the final file is as close as possible to 50KB.",
     },
     {
-      q: "Why do job portals or online forms require 50KB JPG files?",
-      a: "Many application systems enforce a strict 50KB JPG limit to ensure fast uploads and compatibility with older verification systems.",
+      q: "Why do some platforms require 50KB PNG files?",
+      a: "Many design systems, dashboards and online forms restrict PNG size to around 50KB to keep interfaces fast, reduce bandwidth usage and ensure quick uploads.",
     },
     {
-      q: "Will compressing to 50KB reduce quality?",
-      a: "Some loss occurs, but this tool optimizes JPG images to maintain clarity while meeting the exact size requirement.",
+      q: "Will compressing a PNG to 50KB remove transparency?",
+      a: "PixSize tries to preserve transparency where possible. However, very large PNGs with alpha channels may need stronger compression or resizing to hit 50KB.",
     },
     {
-      q: "Is 50KB enough for resumes or profile photos?",
-      a: "Yes, 50KB JPG images are widely accepted by HR systems, ATS platforms, and university portals.",
+      q: "Is 50KB enough for logos or UI icons?",
+      a: "Yes. 50KB is usually sufficient for web logos, buttons, UI icons and simple graphics, especially when the image dimensions are not too large.",
     },
   ];
 
@@ -72,10 +72,10 @@ export default function JpgTo50kbPage() {
   const jsonLdPage = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "Compress JPG to 50KB",
-    url: "https://compresstokb.com/jpg-to-50kb",
+    name: "Compress PNG to 50KB – PixSize",
+    url: "https://compresstokb.com/png-to-50kb",
     description:
-      "Free online tool to compress JPG images to exactly 50KB for forms, uploads, and documents.",
+      "Free online tool by PixSize to compress PNG images to exactly 50KB for logos, UI icons and online PNG uploads that require strict file size limits.",
   };
 
   return (
@@ -92,10 +92,10 @@ export default function JpgTo50kbPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
       />
 
-      {/* 工具主体 */}
+      {/* 工具主体：默认目标 50KB，标题强调 PNG + Exact Size */}
       <ImageCompressorTool
         initialTargetSize="50"
-        titleOverride="Compress JPG to 50KB"
+        titleOverride="Compress PNG to 50KB (Exact Size)"
       />
 
       {/* 页面 FAQ 文本内容（增强排名） */}
