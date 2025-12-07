@@ -4,7 +4,7 @@ import { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { SIZES_KB } from "@/lib/compressionSizes";
 
-// 客户端组件
+// 动态加载客户端组件
 const ImageCompressorTool = dynamic(
   () => import("@/components/ImageCompressorTool"),
   { ssr: false }
@@ -14,27 +14,35 @@ const ImageCompressorTool = dynamic(
 // 生成所有静态路径
 // ------------------------------
 export function generateStaticParams() {
+  // 只用 KB 尺寸生成静态路径，比如 /compress-to-10kb
   return SIZES_KB.map((size) => ({
     size: String(size),
   }));
 }
 
+// 一个小工具：保证 size 是合理的数字字符串
+function normalizeSizeParam(raw: string | undefined): string {
+  if (!raw) return "";
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return "";
+  return String(Math.round(n));
+}
+
 // ------------------------------
-// 动态 Metadata（带 PixSize & Exact Size）
+// 动态 Metadata（核心 SEO 强化）
 // ------------------------------
 export async function generateMetadata({
   params,
 }: {
   params: { size: string };
 }): Promise<Metadata> {
-  // 保险起见，把非数字去掉（防止将来有特殊格式）
-  const rawSize = params.size;
-  const sizeKB = rawSize.replace(/\D/g, "") || rawSize;
+  const normalized = normalizeSizeParam(params.size);
+  const displaySize = normalized || params.size || "KB";
 
-  const title = `Compress Image to ${sizeKB}KB – Exact Size Online Compressor | PixSize`;
-  const description = `Use PixSize to compress JPG or PNG images to exactly ${sizeKB}KB. Perfect for online forms, job portals, passport and visa submissions, and email attachments.`;
+  const title = `Compress Image to ${displaySize}KB – Exact Size JPG/PNG Compressor | PixSize`;
+  const description = `Free online tool by PixSize to compress JPG or PNG images to exactly ${displaySize}KB. Perfect for forms, online submissions, passports, and visa uploads.`;
 
-  const url = `https://compresstokb.com/compress-to-${sizeKB}kb`;
+  const url = `https://compresstokb.com/compress-to-${displaySize}kb`;
 
   return {
     title,
@@ -49,7 +57,7 @@ export async function generateMetadata({
       type: "website",
       images: [
         {
-          url: `https://compresstokb.com/api/og?title=Compress+to+${sizeKB}KB&subtitle=Exact+Size+Image+Compressor&size=${sizeKB}KB`,
+          url: `https://compresstokb.com/api/og?title=Compress+to+${displaySize}KB&subtitle=Exact+Size+Image+Compressor&size=${displaySize}KB`,
           width: 1200,
           height: 630,
         },
@@ -59,26 +67,28 @@ export async function generateMetadata({
 }
 
 // ------------------------------
-// 页面主体：这里才是“自动填好输入框”的关键
+// 页面主体
 // ------------------------------
 export default function DynamicCompressPage({
   params,
 }: {
   params: { size: string };
 }) {
-  const rawSize = params.size;
-  const sizeKB = rawSize.replace(/\D/g, "") || rawSize;
+  const normalized = normalizeSizeParam(params.size);
+  const effectiveSize = normalized || ""; // 传给组件用作默认值
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: `Compress Image to ${sizeKB}KB`,
-    url: `https://compresstokb.com/compress-to-${sizeKB}kb`,
-    description: `Online tool by PixSize to compress an image to exactly ${sizeKB}KB.`,
+    name: `Compress Image to ${normalized || params.size}KB`,
+    url: `https://compresstokb.com/compress-to-${normalized || params.size}kb`,
+    description: `Online tool to compress an image to exactly ${
+      normalized || params.size
+    }KB.`,
     potentialAction: {
       "@type": "Action",
       name: "Compress Image",
-      target: `https://compresstokb.com/compress-to-${sizeKB}kb`,
+      target: `https://compresstokb.com/compress-to-${normalized || params.size}kb`,
     },
   };
 
@@ -90,10 +100,10 @@ export default function DynamicCompressPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* 关键：把 sizeKB 作为 initialTargetSize 传给工具 */}
+      {/* 工具主体：这里会把 size 作为默认值填进输入框 */}
       <ImageCompressorTool
-        initialTargetSize={sizeKB}
-        titleOverride={`Compress Image to ${sizeKB}KB`}
+        initialTargetSize={effectiveSize}
+        titleOverride={`Compress Image to ${normalized || params.size}KB`}
       />
     </>
   );
