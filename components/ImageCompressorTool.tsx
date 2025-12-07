@@ -3,177 +3,26 @@
 import React, { useState, useCallback, useEffect, memo } from "react"
 import imageCompression from "browser-image-compression"
 
-// --- 图标组件 (内联样式防崩坏) ---
-const UploadIcon = memo(({ className = "w-6 h-6" }: { className?: string }) => (
-  <svg
-    style={{ width: "24px", height: "24px" }}
-    className={className}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
-    <path d="M12 12v9" />
-    <path d="m8 17 4-5 4 5" />
-  </svg>
-))
+// Icons
+const UploadIcon = memo(({ className = "w-6 h-6" }: { className?: string }) => (<svg style={{width:'24px', height:'24px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" /><path d="M12 12v9" /><path d="m8 17 4-5 4 5" /></svg>))
 UploadIcon.displayName = "UploadIcon"
-
-const ImageIcon = memo(({ className = "w-5 h-5" }: { className?: string }) => (
-  <svg
-    style={{ width: "20px", height: "20px" }}
-    className={className}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-    <circle cx="9" cy="9" r="2" />
-    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-  </svg>
-))
+const ImageIcon = memo(({ className = "w-5 h-5" }: { className?: string }) => (<svg style={{width:'20px', height:'20px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>))
 ImageIcon.displayName = "ImageIcon"
-
-const ZapIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg
-    style={{ width: "16px", height: "16px" }}
-    className={className}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
-  </svg>
-))
+const ZapIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (<svg style={{width:'16px', height:'16px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" /></svg>))
 ZapIcon.displayName = "ZapIcon"
-
-const TargetIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg
-    style={{ width: "16px", height: "16px" }}
-    className={className}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <circle cx="12" cy="12" r="6" />
-    <circle cx="12" cy="12" r="2" />
-  </svg>
-))
+const TargetIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (<svg style={{width:'16px', height:'16px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>))
 TargetIcon.displayName = "TargetIcon"
-
-const ShieldIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg
-    style={{ width: "16px", height: "16px" }}
-    className={className}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
-    <path d="m9 12 2 2 4-4" />
-  </svg>
-))
+const ShieldIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (<svg style={{width:'16px', height:'16px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" /></svg>))
 ShieldIcon.displayName = "ShieldIcon"
-
-const DownloadIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg
-    style={{ width: "16px", height: "16px" }}
-    className={className}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-    <polyline points="7 10 12 15 17 10" />
-    <line x1="12" x2="12" y1="15" y2="3" />
-  </svg>
-))
+const DownloadIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (<svg style={{width:'16px', height:'16px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>))
 DownloadIcon.displayName = "DownloadIcon"
-
-const XIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg
-    style={{ width: "16px", height: "16px" }}
-    className={className}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M18 6 6 18" />
-    <path d="m6 6 12 12" />
-  </svg>
-))
+const XIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (<svg style={{width:'16px', height:'16px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>))
 XIcon.displayName = "XIcon"
-
-const CheckIcon = memo(({ className = "w-3 h-3" }: { className?: string }) => (
-  <svg
-    style={{ width: "12px", height: "12px" }}
-    className={className}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="3"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-))
+const CheckIcon = memo(({ className = "w-3 h-3" }: { className?: string }) => (<svg style={{width:'12px', height:'12px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>))
 CheckIcon.displayName = "CheckIcon"
-
-const LoaderIcon = memo(({ className = "w-5 h-5" }: { className?: string }) => (
-  <svg
-    style={{ width: "20px", height: "20px" }}
-    className={`${className} animate-spin`}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-  </svg>
-))
+const LoaderIcon = memo(({ className = "w-5 h-5" }: { className?: string }) => (<svg style={{width:'20px', height:'20px'}} className={`${className} animate-spin`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>))
 LoaderIcon.displayName = "LoaderIcon"
-
-const AlertIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg
-    style={{ width: "16px", height: "16px" }}
-    className={className}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <line x1="12" x2="12" y1="8" y2="12" />
-    <line x1="12" x2="12.01" y1="16" y2="16" />
-  </svg>
-))
+const AlertIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (<svg style={{width:'16px', height:'16px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg>))
 AlertIcon.displayName = "AlertIcon"
 
 type Status = "idle" | "uploading" | "compressing" | "done" | "error"
@@ -181,11 +30,13 @@ type Status = "idle" | "uploading" | "compressing" | "done" | "error"
 interface ImageCompressorProps {
   initialTargetSize?: string
   titleOverride?: string
+  descriptionOverride?: string
 }
 
 export default function ImageCompressorTool({
   initialTargetSize = "",
   titleOverride,
+  descriptionOverride,
 }: ImageCompressorProps) {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -197,31 +48,47 @@ export default function ImageCompressorTool({
   const [compressedSize, setCompressedSize] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // 初始传参变化时，同步到输入框（用于 JPG to 50KB / Visa 200KB 等固定页）
   useEffect(() => {
     if (initialTargetSize) setTargetSize(initialTargetSize)
   }, [initialTargetSize])
 
-  // ⭐ 当没有 initialTargetSize 时，从 URL 中解析 /compress-to-30kb /compress-to-5mb
+  // ✅ 核心修复：客户端 URL 解析也要换算 MB
   useEffect(() => {
     if (initialTargetSize) return
     if (typeof window === "undefined") return
-
-    const path = window.location.pathname // 例如: /compress-to-30kb
+    const path = window.location.pathname
     const match = path.match(/compress-to-([0-9]+)(kb|mb)/i)
     if (match && match[1]) {
-      setTargetSize(match[1]) // 只取数字部分作为默认值
+      const num = parseInt(match[1])
+      const unit = match[2].toLowerCase()
+      if (unit === 'mb') {
+        // 如果 URL 是 5mb，这里设置成 5120
+        setTargetSize((num * 1024).toString())
+      } else {
+        setTargetSize(match[1])
+      }
     }
   }, [initialTargetSize])
 
-  // 修改目标值时，如果之前已经压缩过，清空结果，避免用户误会
   useEffect(() => {
     if (status === "done" || compressedBlob) {
       setStatus("idle")
       setCompressedBlob(null)
       setCompressedSize(null)
     }
-  }, [targetSize]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [targetSize])
+
+  // 动态文案（如果是大单位，文案也显示 MB）
+  const getIntroText = () => {
+    if (descriptionOverride) return descriptionOverride;
+    if (targetSize) {
+      const sizeNum = parseInt(targetSize);
+      // 智能显示：如果 > 1000，显示 MB 单位给用户看，体验更好
+      const displaySize = sizeNum >= 1000 ? `${sizeNum / 1024}MB` : `${sizeNum}KB`;
+      return `Looking to compress image to ${displaySize}? PixSize helps you reduce JPG/PNG to exactly ${displaySize} for web uploads, exams, and forms without quality loss.`;
+    }
+    return "Precise image compression powered by PixSize — reduce any image to an exact file size in KB or MB while keeping it clear and usable for passports, forms, job portals and more.";
+  };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -236,17 +103,12 @@ export default function ImageCompressorTool({
     setStatus("uploading")
     setProgress(0)
     setError(null)
-
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(progressInterval)
-          return 90
-        }
+        if (prev >= 90) { clearInterval(progressInterval); return 90 }
         return prev + 10
       })
     }, 50)
-
     const reader = new FileReader()
     reader.onload = (e) => {
       clearInterval(progressInterval)
@@ -257,18 +119,13 @@ export default function ImageCompressorTool({
       setCompressedBlob(null)
       setCompressedSize(null)
     }
-    reader.onerror = () => {
-      setError("Error reading file")
-      setStatus("idle")
-    }
+    reader.onerror = () => { setError("Error reading file"); setStatus("idle") }
     reader.readAsDataURL(selectedFile)
   }, [])
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      processFile(selectedFile)
-    }
+    if (selectedFile) processFile(selectedFile)
   }
 
   const formatFileSize = (bytes: number) => {
@@ -278,78 +135,29 @@ export default function ImageCompressorTool({
   }
 
   const clearFile = () => {
-    setFile(null)
-    setPreview(null)
-    setStatus("idle")
-    setProgress(0)
-    setCompressedBlob(null)
-    setCompressedSize(null)
-    setError(null)
+    setFile(null); setPreview(null); setStatus("idle"); setProgress(0);
+    setCompressedBlob(null); setCompressedSize(null); setError(null);
   }
 
-  // --- 内置压缩逻辑 ---
-  const compressImage = async (
-    file: File,
-    targetKB: number,
-    onProgress: (p: number) => void
-  ) => {
+  const compressImage = async (file: File, targetKB: number, onProgress: (p: number) => void) => {
     const targetSizeBytes = targetKB * 1024
-
-    if (file.size <= targetSizeBytes) {
-      onProgress(100)
-      return { blob: file, compressedSize: file.size }
-    }
-
+    if (file.size <= targetSizeBytes) { onProgress(100); return { blob: file, compressedSize: file.size } }
     const sizeRatio = targetSizeBytes / file.size
     let startQuality = sizeRatio < 0.1 ? 0.2 : sizeRatio < 0.5 ? 0.5 : 0.8
     let maxWidthOrHeight = 1920
     if (targetKB < 50) maxWidthOrHeight = 800
     else if (targetKB < 100) maxWidthOrHeight = 1200
     else if (targetKB < 500) maxWidthOrHeight = 1600
-
-    const options: any = {
-      maxSizeMB: targetKB / 1024,
-      maxWidthOrHeight,
-      useWebWorker: true,
-      initialQuality: startQuality,
-      alwaysKeepResolution: false,
-      fileType: file.type,
-    }
-
-    let minQ = 0
-    let maxQ = 1
-    let currentBlob: Blob = file
-    let iteration = 0
-
+    const options: any = { maxSizeMB: targetKB / 1024, maxWidthOrHeight, useWebWorker: true, initialQuality: startQuality, alwaysKeepResolution: false, fileType: file.type }
+    let minQ = 0; let maxQ = 1; let currentBlob: Blob = file; let iteration = 0
     while (iteration < 6) {
       onProgress((iteration / 6) * 100)
-      try {
-        currentBlob = await imageCompression(file, options)
-      } catch (e) {
-        console.error("Compression Library Error:", e)
-        throw e
-      }
-
-      if (
-        currentBlob.size <= targetSizeBytes &&
-        currentBlob.size > targetSizeBytes * 0.85
-      ) {
-        break
-      }
-
-      if (currentBlob.size < targetSizeBytes * 0.85) {
-        minQ = options.initialQuality
-        options.initialQuality = (minQ + maxQ) / 2
-      } else {
-        maxQ = options.initialQuality
-        options.initialQuality = (minQ + maxQ) / 2
-        if (options.initialQuality < 0.2 && currentBlob.size > targetSizeBytes) {
-          options.maxWidthOrHeight = Math.floor(options.maxWidthOrHeight * 0.8)
-        }
-      }
+      try { currentBlob = await imageCompression(file, options) } catch (e) { console.error(e); throw e }
+      if (currentBlob.size <= targetSizeBytes && currentBlob.size > targetSizeBytes * 0.85) break
+      if (currentBlob.size < targetSizeBytes * 0.85) { minQ = options.initialQuality; options.initialQuality = (minQ + maxQ) / 2 }
+      else { maxQ = options.initialQuality; options.initialQuality = (minQ + maxQ) / 2; if (options.initialQuality < 0.2 && currentBlob.size > targetSizeBytes) options.maxWidthOrHeight = Math.floor(options.maxWidthOrHeight * 0.8) }
       iteration++
     }
-
     onProgress(100)
     return { blob: currentBlob, compressedSize: currentBlob.size }
   }
@@ -357,27 +165,13 @@ export default function ImageCompressorTool({
   const handleCompress = useCallback(async () => {
     if (!file || !targetSize) return
     const target = parseInt(targetSize)
-    if (isNaN(target) || target <= 0) {
-      setError("Please enter a valid target size")
-      setTimeout(() => setError(null), 5000)
-      return
-    }
-    setStatus("compressing")
-    setProgress(0)
-    setError(null)
-
+    if (isNaN(target) || target <= 0) { setError("Please enter a valid target size"); setTimeout(() => setError(null), 5000); return }
+    setStatus("compressing"); setProgress(0); setError(null)
     try {
-      const result = await compressImage(file, target, (val) =>
-        setProgress(Math.round(val))
-      )
-      setCompressedBlob(result.blob)
-      setCompressedSize(result.compressedSize)
-      setStatus("done")
+      const result = await compressImage(file, target, (val) => setProgress(Math.round(val)))
+      setCompressedBlob(result.blob); setCompressedSize(result.compressedSize); setStatus("done")
     } catch (error) {
-      console.error("Handle Compress Error:", error)
-      setError("Failed to compress image. Please try again.")
-      setStatus("error")
-      setTimeout(() => setError(null), 7000)
+      console.error("Handle Compress Error:", error); setError("Failed to compress image. Please try again."); setStatus("error"); setTimeout(() => setError(null), 7000)
     }
   }, [file, targetSize])
 
@@ -390,40 +184,12 @@ export default function ImageCompressorTool({
     const a = document.createElement("a")
     a.href = url
     a.download = `${baseName}${suffix}${extension}`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url)
   }, [compressedBlob, file, targetSize])
 
-  const quickSizes = [
-    { value: 20, label: "20 KB" },
-    { value: 50, label: "50 KB" },
-    { value: 100, label: "100 KB" },
-    { value: 200, label: "200 KB" },
-    { value: 300, label: "300 KB" },
-    { value: 500, label: "500 KB" },
-    { value: 1024, label: "1 MB" },
-    { value: 2048, label: "2 MB" },
-  ]
-
-  const features = [
-    { icon: TargetIcon, title: "Exact Size Control", desc: "Set a precise KB/MB target" },
-    { icon: ZapIcon, title: "Lightning Fast", desc: "Compress in just a few seconds" },
-    {
-      icon: ShieldIcon,
-      title: "100% Private",
-      desc: "Processing happens in your browser",
-    },
-    {
-      icon: DownloadIcon,
-      title: "Instant Download",
-      desc: "No signup, no waiting",
-    },
-  ]
-
-  const canCompress =
-    file && targetSize && status !== "compressing" && status !== "uploading"
+  const quickSizes = [{ value: 20, label: "20 KB" }, { value: 50, label: "50 KB" }, { value: 100, label: "100 KB" }, { value: 200, label: "200 KB" }, { value: 300, label: "300 KB" }, { value: 500, label: "500 KB" }, { value: 1024, label: "1 MB" }, { value: 2048, label: "2 MB" }]
+  const features = [{ icon: TargetIcon, title: "Exact Size Control", desc: "Set a precise KB/MB target" }, { icon: ZapIcon, title: "Lightning Fast", desc: "Compress in just a few seconds" }, { icon: ShieldIcon, title: "100% Private", desc: "Processing happens in your browser" }, { icon: DownloadIcon, title: "Instant Download", desc: "No signup, no waiting" }]
+  const canCompress = file && targetSize && status !== "compressing" && status !== "uploading"
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex flex-col">
@@ -451,7 +217,7 @@ export default function ImageCompressorTool({
             {titleOverride || "Compress Images to Exact Size (KB or MB)"}
           </h1>
           <p className="text-slate-500 text-sm sm:text-base max-w-md mx-auto">
-            Precise image compression powered by PixSize — reduce any image to an exact file size in KB or MB while keeping it clear and usable for passports, forms, job portals and more.
+            {getIntroText()}
           </p>
         </div>
 

@@ -1,14 +1,29 @@
-// app/[slug]/page.tsx
-
 import { Metadata } from "next"
 import dynamic from "next/dynamic"
 import { getSeoPageConfig } from "@/lib/seoPages"
+import SEOContent from "@/components/SEOContent"
 
-// 动态加载压缩工具（关闭 SSR）
 const ImageCompressorTool = dynamic(
   () => import("@/components/ImageCompressorTool"),
   { ssr: false }
 )
+
+export function generateStaticParams() {
+  const sizesKB = [10, 15, 20, 30, 40, 50, 60, 80, 100, 200, 300, 500];
+  const sizesMB = [1, 2, 5, 10]; // 确保包含 5MB, 10MB
+  
+  const kbPaths = sizesKB.map((size) => ({ slug: `compress-to-${size}kb` }));
+  const mbPaths = sizesMB.map((size) => ({ slug: `compress-to-${size}mb` }));
+  
+  const formatPaths = [
+    { slug: 'jpg-to-50kb' },
+    { slug: 'png-to-50kb' },
+    { slug: 'passport-photo-size' },
+    { slug: 'visa-photo-compressor' },
+  ];
+
+  return [...kbPaths, ...mbPaths, ...formatPaths];
+}
 
 type PageProps = {
   params: {
@@ -16,72 +31,80 @@ type PageProps = {
   }
 }
 
-// 统一用配置生成每个专题页的 <title> / <meta description>
-export async function generateMetadata(
-  { params }: PageProps
-): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const seo = getSeoPageConfig(params.slug)
-
-  if (!seo) {
-    // 兜底：非专题 slug，走通用的
+  if (seo) {
     return {
-      title: "Compress Image to Exact Size – ExactSize Free Online Tool",
-      description:
-        "Free online tool to compress images to an exact file size in KB or MB. Supports JPG, PNG, WEBP. No signup, instant compression."
+      title: seo.title,
+      description: seo.description
     }
   }
-
+  const humanReadableSlug = params.slug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   return {
-    title: seo.title,
-    description: seo.description
+    title: `${humanReadableSlug} - ExactSize Free Tool`,
+    description: `Free online tool to ${humanReadableSlug.toLowerCase()}. Reduce image size accurately without uploading to server.`
   }
 }
 
 export default function SlugPage({ params }: PageProps) {
   const seo = getSeoPageConfig(params.slug)
 
-  // 决定默认目标大小
-  const initialTargetSize = seo?.defaultTargetSize ?? ""
+  // A. 特殊页面
+  if (seo) {
+    const faqJsonLd = seo.faqs && seo.faqs.length > 0 ? { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: seo.faqs.map((item) => ({ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } })) } : null
 
-  // FAQ 结构化数据（只有配置了 faqs 的页面才注入）
-  const faqJsonLd =
-    seo && seo.faqs && seo.faqs.length > 0
-      ? {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: seo.faqs.map((item) => ({
-            "@type": "Question",
-            name: item.question,
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: item.answer
-            }
-          }))
-        }
-      : null
-
-  return (
-    <>
-      {/* FAQ Schema：只对 4 个专题页生效，帮助 Google 出“常见问题”的富结果 */}
-      {faqJsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+    return (
+      <>
+        {faqJsonLd && (<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />)}
+        <ImageCompressorTool
+          initialTargetSize={seo.defaultTargetSize ?? ""}
+          titleOverride={seo.h1 ?? "Compress Image to Exact Size"}
+          descriptionOverride={seo.intro} 
         />
-      )}
-
-      {/* 主工具：标题用 h1 配置，targetSize 用 defaultTargetSize 配置 */}
-      <ImageCompressorTool
-        initialTargetSize={initialTargetSize}
-        titleOverride={seo?.h1 ?? "Compress Image to Exact Size"}
-      />
-
-      {/* 可选：在工具后面追加一小段介绍文案，增强页面正文里的关键词密度 */}
-      {seo && (
         <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-10 mt-4 text-sm text-slate-600">
           <p>{seo.intro}</p>
         </section>
-      )}
+        {seo.faqs && (
+          <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-16">
+            <h2 className="text-xl font-bold mb-6">Frequently Asked Questions</h2>
+            <div className="space-y-6">
+              {seo.faqs.map((faq, idx) => (
+                <div key={idx}><p className="font-medium text-slate-900 mb-1">{faq.question}</p><p className="text-sm text-slate-600">{faq.answer}</p></div>
+              ))}
+            </div>
+          </section>
+        )}
+      </>
+    )
+  }
+
+  // B. 通用数字页面 (核心修复在这里！)
+  const match = params.slug.match(/(\d+)(kb|mb)/i);
+  let initialSize = "";
+  let unit = "KB";
+  let titleOverride = "Compress Image";
+
+  if (match) {
+    const number = parseInt(match[1]);
+    unit = match[2].toUpperCase(); // 这里拿到单位，比如 MB
+    
+    // ✅ 修复逻辑：如果是 MB，乘以 1024 换算成 KB
+    if (unit === 'MB') {
+      initialSize = (number * 1024).toString(); 
+      titleOverride = `Compress Image to ${number}MB`;
+    } else {
+      initialSize = number.toString();
+      titleOverride = `Compress Image to ${number}KB`;
+    }
+  }
+
+  return (
+    <>
+      <ImageCompressorTool 
+        initialTargetSize={initialSize} 
+        titleOverride={titleOverride} 
+      />
+      <SEOContent size={match ? match[1] : ""} unit={unit} />
     </>
   )
 }
