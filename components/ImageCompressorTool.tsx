@@ -52,7 +52,7 @@ export default function ImageCompressorTool({
     if (initialTargetSize) setTargetSize(initialTargetSize)
   }, [initialTargetSize])
 
-  // ✅ 核心修复：客户端 URL 解析也要换算 MB
+  // 修复：客户端解析 URL 并处理 MB
   useEffect(() => {
     if (initialTargetSize) return
     if (typeof window === "undefined") return
@@ -62,7 +62,6 @@ export default function ImageCompressorTool({
       const num = parseInt(match[1])
       const unit = match[2].toLowerCase()
       if (unit === 'mb') {
-        // 如果 URL 是 5mb，这里设置成 5120
         setTargetSize((num * 1024).toString())
       } else {
         setTargetSize(match[1])
@@ -78,16 +77,21 @@ export default function ImageCompressorTool({
     }
   }, [targetSize])
 
-  // 动态文案（如果是大单位，文案也显示 MB）
+  // --- 文案逻辑 ---
   const getIntroText = () => {
+    // 1. 如果有外部传入的描述（比如首页或 Visa 页的定制文案），直接用
     if (descriptionOverride) return descriptionOverride;
+
+    // 2. 如果是通用数字页，生成动态文案
     if (targetSize) {
       const sizeNum = parseInt(targetSize);
-      // 智能显示：如果 > 1000，显示 MB 单位给用户看，体验更好
       const displaySize = sizeNum >= 1000 ? `${sizeNum / 1024}MB` : `${sizeNum}KB`;
-      return `Looking to compress image to ${displaySize}? PixSize helps you reduce JPG/PNG to exactly ${displaySize} for web uploads, exams, and forms without quality loss.`;
+      // 这里的文案已经统一为：主语是 PixSize，关键词是 exact size
+      return `Looking to compress an image to exactly ${displaySize}? PixSize helps you reduce JPG/PNG file sizes for web uploads, exams, and forms while maintaining quality.`;
     }
-    return "Precise image compression powered by PixSize — reduce any image to an exact file size in KB or MB while keeping it clear and usable for passports, forms, job portals and more.";
+
+    // 3. 兜底
+    return "Precise image compression powered by PixSize — reduce any image to an exact file size in KB or MB while keeping it clear and usable.";
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -216,6 +220,7 @@ export default function ImageCompressorTool({
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-3 tracking-tight">
             {titleOverride || "Compress Images to Exact Size (KB or MB)"}
           </h1>
+          {/* 这里会根据是否有 descriptionOverride 自动判断 */}
           <p className="text-slate-500 text-sm sm:text-base max-w-md mx-auto">
             {getIntroText()}
           </p>
@@ -271,66 +276,17 @@ export default function ImageCompressorTool({
                   )}
                   {preview ? (
                     <div className="p-4 w-full h-full flex flex-col">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          clearFile()
-                        }}
-                        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-900/70 hover:bg-slate-900 text-white flex items-center justify-center transition-colors z-10"
-                        disabled={status === "compressing"}
-                      >
-                        <XIcon />
-                      </button>
-                      <div className="flex-1 flex items-center justify-center p-2">
-                        <img
-                          src={preview}
-                          alt="Preview"
-                          className="max-w-full max-h-[160px] sm:max-h-[200px] object-contain rounded-lg shadow-md"
-                          loading="eager"
-                        />
-                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); clearFile() }} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-900/70 hover:bg-slate-900 text-white flex items-center justify-center transition-colors z-10" disabled={status === "compressing"}><XIcon /></button>
+                      <div className="flex-1 flex items-center justify-center p-2"><img src={preview} alt="Preview" className="max-w-full max-h-[160px] sm:max-h-[200px] object-contain rounded-lg shadow-md" loading="eager" /></div>
                       <div className="flex items-center gap-3 pt-3 border-t border-slate-100 mt-2">
-                        <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                          <ImageIcon className="w-4 h-4 text-slate-500" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-700 truncate">
-                            {file?.name}
-                          </p>
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="text-slate-400">
-                              {formatFileSize(file?.size || 0)}
-                            </span>
-                            {status === "done" && compressedSize && (
-                              <>
-                                <span className="text-slate-300">→</span>
-                                <span className="text-green-600 font-medium">
-                                  {formatFileSize(compressedSize)}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
+                        <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0"><ImageIcon className="w-4 h-4 text-slate-500" /></div>
+                        <div className="flex-1 min-w-0"><p className="text-sm font-medium text-slate-700 truncate">{file?.name}</p><div className="flex items-center gap-2 text-xs"><span className="text-slate-400">{formatFileSize(file?.size || 0)}</span>{status === "done" && compressedSize && (<><span className="text-slate-300">→</span><span className="text-green-600 font-medium">{formatFileSize(compressedSize)}</span></>)}</div></div>
                       </div>
                     </div>
                   ) : (
                     <div className="text-center p-6">
-                      <div
-                        className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl mx-auto flex items-center justify-center mb-4 transition-all duration-150 ${
-                          isDragging
-                            ? "bg-blue-500 text-white scale-110"
-                            : "bg-slate-100 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-500"
-                        }`}
-                      >
-                        <UploadIcon className="w-6 h-6 sm:w-7 sm:h-7" />
-                      </div>
-                      <p className="font-semibold text-slate-800 mb-1">
-                        {isDragging ? "Drop it here!" : "Drop your image here"}
-                      </p>
-                      <p className="text-sm text-slate-400 mb-2">
-                        or click to browse
-                      </p>
-                      <p className="text-xs text-slate-300">JPG, PNG, WEBP</p>
+                      <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl mx-auto flex items-center justify-center mb-4 transition-all duration-150 ${isDragging ? "bg-blue-500 text-white scale-110" : "bg-slate-100 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-500"}`}><UploadIcon className="w-6 h-6 sm:w-7 sm:h-7" /></div>
+                      <p className="font-semibold text-slate-800 mb-1">{isDragging ? "Drop it here!" : "Drop your image here"}</p><p className="text-sm text-slate-400 mb-2">or click to browse</p><p className="text-xs text-slate-300">JPG, PNG, WEBP</p>
                     </div>
                   )}
                 </div>
@@ -365,21 +321,8 @@ export default function ImageCompressorTool({
                     {quickSizes.map((size) => {
                       const isSelected = targetSize === String(size.value)
                       return (
-                        <button
-                          key={size.value}
-                          onClick={() => setTargetSize(String(size.value))}
-                          disabled={status === "compressing"}
-                          className={`relative px-2 py-2 rounded-lg text-sm font-medium transition-all duration-100 ${
-                            isSelected
-                              ? "bg-blue-600 text-white shadow-md"
-                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                          } disabled:opacity-50`}
-                        >
-                          {isSelected && (
-                            <span className="absolute top-1 right-1">
-                              <CheckIcon className="w-2.5 h-2.5" />
-                            </span>
-                          )}
+                        <button key={size.value} onClick={() => setTargetSize(String(size.value))} disabled={status === "compressing"} className={`relative px-2 py-2 rounded-lg text-sm font-medium transition-all duration-100 ${isSelected ? "bg-blue-600 text-white shadow-md" : "bg-slate-100 text-slate-600 hover:bg-slate-200"} disabled:opacity-50`}>
+                          {isSelected && (<span className="absolute top-1 right-1"><CheckIcon className="w-2.5 h-2.5" /></span>)}
                           {size.label}
                         </button>
                       )
