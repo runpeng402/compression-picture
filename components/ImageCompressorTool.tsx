@@ -197,10 +197,24 @@ export default function ImageCompressorTool({
   const [compressedSize, setCompressedSize] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  // 初始传参变化时，同步到输入框（用于 JPG to 50KB / Visa 200KB 等固定页）
   useEffect(() => {
     if (initialTargetSize) setTargetSize(initialTargetSize)
   }, [initialTargetSize])
 
+  // ⭐ 当没有 initialTargetSize 时，从 URL 中解析 /compress-to-30kb /compress-to-5mb
+  useEffect(() => {
+    if (initialTargetSize) return
+    if (typeof window === "undefined") return
+
+    const path = window.location.pathname // 例如: /compress-to-30kb
+    const match = path.match(/compress-to-([0-9]+)(kb|mb)/i)
+    if (match && match[1]) {
+      setTargetSize(match[1]) // 只取数字部分作为默认值
+    }
+  }, [initialTargetSize])
+
+  // 修改目标值时，如果之前已经压缩过，清空结果，避免用户误会
   useEffect(() => {
     if (status === "done" || compressedBlob) {
       setStatus("idle")
@@ -391,37 +405,6 @@ export default function ImageCompressorTool({
     { value: 500, label: "500 KB" },
     { value: 1024, label: "1 MB" },
     { value: 2048, label: "2 MB" },
-  ]
-
-  // ✅ 覆盖截图里的所有热门尺寸
-  const popularSizeLinks = [
-    { label: "5KB", targetKB: 5 },
-    { label: "8KB", targetKB: 8 },
-    { label: "10KB", targetKB: 10 },
-    { label: "15KB", targetKB: 15 },
-    { label: "20KB", targetKB: 20 },
-    { label: "30KB", targetKB: 30 },
-    { label: "40KB", targetKB: 40 },
-    { label: "50KB", targetKB: 50 },
-    { label: "60KB", targetKB: 60 },
-    { label: "70KB", targetKB: 70 },
-    { label: "80KB", targetKB: 80 },
-    { label: "90KB", targetKB: 90 },
-    { label: "100KB", targetKB: 100 },
-    { label: "150KB", targetKB: 150 },
-    { label: "200KB", targetKB: 200 },
-    { label: "250KB", targetKB: 250 },
-    { label: "300KB", targetKB: 300 },
-    { label: "400KB", targetKB: 400 },
-    { label: "500KB", targetKB: 500 },
-    { label: "600KB", targetKB: 600 },
-    { label: "800KB", targetKB: 800 },
-    { label: "900KB", targetKB: 900 },
-    // MB 显示为 MB，路由用等价的 KB
-    { label: "1MB", targetKB: 1024 },
-    { label: "2MB", targetKB: 2048 },
-    { label: "5MB", targetKB: 5120 },
-    { label: "10MB", targetKB: 10240 },
   ]
 
   const features = [
@@ -711,19 +694,52 @@ export default function ImageCompressorTool({
               Popular Sizes (Exact KB / MB)
             </h3>
             <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-sm">
-              {popularSizeLinks.map((item, index, arr) => (
-                <span key={item.label} className="inline-flex items-center">
-                  <a
-                    href={`/compress-to-${item.targetKB}kb`}
-                    className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                  >
-                    {item.label}
-                  </a>
-                  {index < arr.length - 1 && (
-                    <span className="text-slate-300 mx-1.5">|</span>
-                  )}
-                </span>
-              ))}
+              {[
+                "5KB",
+                "8KB",
+                "10KB",
+                "15KB",
+                "20KB",
+                "30KB",
+                "40KB",
+                "50KB",
+                "60KB",
+                "70KB",
+                "80KB",
+                "90KB",
+                "100KB",
+                "150KB",
+                "200KB",
+                "250KB",
+                "300KB",
+                "400KB",
+                "500KB",
+                "600KB",
+                "800KB",
+                "900KB",
+                "1MB",
+                "2MB",
+                "5MB",
+                "10MB",
+              ].map((size, index, arr) => {
+                const numericPart = parseInt(size)
+                const unit = size.toLowerCase().includes("mb") ? "mb" : "kb"
+                const href = `/compress-to-${numericPart}${unit}`
+
+                return (
+                  <span key={size} className="inline-flex items-center">
+                    <a
+                      href={href}
+                      className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                    >
+                      {size}
+                    </a>
+                    {index < arr.length - 1 && (
+                      <span className="text-slate-300 mx-1.5">|</span>
+                    )}
+                  </span>
+                )
+              })}
             </div>
           </div>
 
