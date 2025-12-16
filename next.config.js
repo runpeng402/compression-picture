@@ -53,15 +53,15 @@ const nextConfig = {
   
   // 8. ✅ 性能优化：现代 JavaScript - 移除旧版 polyfills（节省 12 KiB）
   compiler: {
-    // 移除不必要的 polyfills
+    // 移除不必要的 console（生产环境）
     removeConsole: process.env.NODE_ENV === 'production' ? {
       exclude: ['error', 'warn'],
     } : false,
   },
   
   // 9. ✅ 性能优化：配置现代浏览器目标，减少转译
-  // Next.js 14 默认支持现代浏览器，但我们可以明确指定
-  // 这将减少旧版 JavaScript polyfills
+  // Next.js 14 默认支持现代浏览器，通过 .browserslistrc 配置
+  // 这将减少旧版 JavaScript polyfills（节省 12 KiB）
 };
 
 module.exports = nextConfig;

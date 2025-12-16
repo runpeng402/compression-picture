@@ -1,0 +1,14 @@
+# ✅ 性能优化：现代浏览器目标，减少旧版 JavaScript polyfills
+# 支持现代浏览器（ES2020+），移除不必要的 polyfills
+# 这将节省约 12 KiB 的旧版 JavaScript
+
+# 现代浏览器（支持 ES2020+）
+> 0.5%
+last 2 versions
+Firefox ESR
+not dead
+
+# 明确排除旧版浏览器
+not IE 11
+not op_mini all
+

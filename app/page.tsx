@@ -1,9 +1,16 @@
 // app/page.tsx
 import { Metadata } from "next";
 import dynamic from "next/dynamic";
+import Script from "next/script";
 
 const ImageCompressorTool = dynamic(
   () => import("@/components/ImageCompressorTool"),
+  { ssr: false }
+);
+
+// ✅ 性能优化：延迟加载 SEO 内容组件
+const LazySEOContent = dynamic(
+  () => import("@/components/LazySEOContent"),
   { ssr: false }
 );
 
@@ -89,73 +96,26 @@ export default function HomePage() {
 
   return (
     <>
-      {/* JSON-LD：站点信息 */}
-      <script
+      {/* ✅ 性能优化：使用 Next.js Script 组件优化 JSON-LD 加载 */}
+      <Script
+        id="json-ld-site"
         type="application/ld+json"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSite) }}
       />
 
-      {/* JSON-LD：FAQ Schema */}
-      <script
+      <Script
+        id="json-ld-faq"
         type="application/ld+json"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
       />
 
       {/* 主工具组件（内部会渲染 1 套 Popular Compressions） */}
       <ImageCompressorTool titleOverride="Compress Images to Exact Size" />
 
-      {/* 品牌 + 长文 SEO 介绍 */}
-      <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-10 mt-10">
-        <h2 className="text-lg font-semibold text-slate-800 mb-3">
-          PixSize – Exact Size Image Compressor
-        </h2>
-        <p className="text-sm text-slate-600 mb-3">
-          <strong>PixSize</strong> is a lightweight image compressor brand built
-          on the <strong>ExactSize</strong> engine. It focuses on one thing
-          only: helping you compress JPG or PNG files to an{" "}
-          <strong>exact file size in KB or MB</strong>, instead of just giving
-          you a rough “smaller file”.
-        </p>
-        <p className="text-sm text-slate-600 mb-3">
-          This makes PixSize especially suitable for{" "}
-          <strong>online forms, job portals, passport and visa systems</strong>,
-          education portals, and government websites that strictly require a
-          maximum file size such as <strong>50KB, 100KB, 200KB, or 500KB</strong>
-          . You can also use it to prepare profile photos, ID document scans,
-          and attachments for email or messaging tools that enforce upload
-          limits.
-        </p>
-        <p className="text-sm text-slate-600 mb-3">
-          Unlike traditional “compress image” tools that only provide a
-          percentage slider, PixSize lets you{" "}
-          <strong>set a precise target</strong> in KB or MB. The ExactSize
-          engine then automatically adjusts compression parameters and re-encodes
-          your image so that the final file size is as close as possible to your
-          target, while preserving visual clarity.
-        </p>
-        <p className="text-sm text-slate-600">
-          All compression is performed in your browser. Your images are{" "}
-          <strong>not stored on a server</strong>, which means your passport
-          photos, ID documents, and personal images stay on your own device. You
-          can use PixSize directly in the browser without registration, download
-          the result instantly, and repeat the process as many times as needed.
-        </p>
-      </section>
-
-      {/* FAQ 文本（与 JSON-LD 对应） */}
-      <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-16">
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">
-          Frequently Asked Questions about Exact Size Compression
-        </h2>
-        <div className="space-y-4 text-sm text-slate-600">
-          {FAQ_ITEMS.map((item, idx) => (
-            <div key={idx}>
-              <p className="font-medium text-slate-800">{item.q}</p>
-              <p className="mt-1">{item.a}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* ✅ 性能优化：延迟加载 SEO 内容，减少初始 CLS */}
+      <LazySEOContent faqItems={FAQ_ITEMS} />
     </>
   );
 }
