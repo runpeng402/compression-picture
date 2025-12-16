@@ -1,29 +1,28 @@
 "use client"
 
 import React, { useState, useCallback, useEffect, memo } from "react"
-import imageCompression from "browser-image-compression"
+// ✅ 性能优化：使用 lucide-react 图标库，减少 bundle 大小（tree-shaking 支持）
+import { 
+  Upload as UploadIcon, 
+  Image as ImageIcon, 
+  Zap as ZapIcon, 
+  Target as TargetIcon, 
+  Shield as ShieldIcon, 
+  Download as DownloadIcon, 
+  X as XIcon, 
+  Check as CheckIcon, 
+  Loader2 as LoaderIcon, 
+  AlertCircle as AlertIcon 
+} from "lucide-react"
 
-// Icons
-const UploadIcon = memo(({ className = "w-6 h-6" }: { className?: string }) => (<svg style={{width:'24px', height:'24px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" /><path d="M12 12v9" /><path d="m8 17 4-5 4 5" /></svg>))
-UploadIcon.displayName = "UploadIcon"
-const ImageIcon = memo(({ className = "w-5 h-5" }: { className?: string }) => (<svg style={{width:'20px', height:'20px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>))
-ImageIcon.displayName = "ImageIcon"
-const ZapIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (<svg style={{width:'16px', height:'16px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" /></svg>))
-ZapIcon.displayName = "ZapIcon"
-const TargetIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (<svg style={{width:'16px', height:'16px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>))
-TargetIcon.displayName = "TargetIcon"
-const ShieldIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (<svg style={{width:'16px', height:'16px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" /></svg>))
-ShieldIcon.displayName = "ShieldIcon"
-const DownloadIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (<svg style={{width:'16px', height:'16px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>))
-DownloadIcon.displayName = "DownloadIcon"
-const XIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (<svg style={{width:'16px', height:'16px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>))
-XIcon.displayName = "XIcon"
-const CheckIcon = memo(({ className = "w-3 h-3" }: { className?: string }) => (<svg style={{width:'12px', height:'12px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>))
-CheckIcon.displayName = "CheckIcon"
-const LoaderIcon = memo(({ className = "w-5 h-5" }: { className?: string }) => (<svg style={{width:'20px', height:'20px'}} className={`${className} animate-spin`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>))
-LoaderIcon.displayName = "LoaderIcon"
-const AlertIcon = memo(({ className = "w-4 h-4" }: { className?: string }) => (<svg style={{width:'16px', height:'16px'}} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg>))
-AlertIcon.displayName = "AlertIcon"
+// ✅ 性能优化：懒加载 browser-image-compression，减少初始 bundle 大小
+let imageCompression: any = null
+const loadImageCompression = async () => {
+  if (!imageCompression) {
+    imageCompression = (await import("browser-image-compression")).default
+  }
+  return imageCompression
+}
 
 type Status = "idle" | "uploading" | "compressing" | "done" | "error"
 
@@ -146,6 +145,10 @@ export default function ImageCompressorTool({
   const compressImage = async (file: File, targetKB: number, onProgress: (p: number) => void) => {
     const targetSizeBytes = targetKB * 1024
     if (file.size <= targetSizeBytes) { onProgress(100); return { blob: file, compressedSize: file.size } }
+    
+    // ✅ 性能优化：懒加载 browser-image-compression，只在需要时加载
+    const compression = await loadImageCompression()
+    
     const sizeRatio = targetSizeBytes / file.size
     let startQuality = sizeRatio < 0.1 ? 0.2 : sizeRatio < 0.5 ? 0.5 : 0.8
     let maxWidthOrHeight = 1920
@@ -156,7 +159,7 @@ export default function ImageCompressorTool({
     let minQ = 0; let maxQ = 1; let currentBlob: Blob = file; let iteration = 0
     while (iteration < 6) {
       onProgress((iteration / 6) * 100)
-      try { currentBlob = await imageCompression(file, options) } catch (e) { console.error(e); throw e }
+      try { currentBlob = await compression(file, options) } catch (e) { console.error(e); throw e }
       if (currentBlob.size <= targetSizeBytes && currentBlob.size > targetSizeBytes * 0.85) break
       if (currentBlob.size < targetSizeBytes * 0.85) { minQ = options.initialQuality; options.initialQuality = (minQ + maxQ) / 2 }
       else { maxQ = options.initialQuality; options.initialQuality = (minQ + maxQ) / 2; if (options.initialQuality < 0.2 && currentBlob.size > targetSizeBytes) options.maxWidthOrHeight = Math.floor(options.maxWidthOrHeight * 0.8) }
@@ -227,8 +230,8 @@ export default function ImageCompressorTool({
         </div>
 
         {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
-            <AlertIcon className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3" role="alert" aria-live="assertive">
+            <AlertIcon className="w-5 h-5 text-red-600 shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-sm text-red-800">{error}</p>
           </div>
         )}
@@ -259,14 +262,17 @@ export default function ImageCompressorTool({
                     onChange={handleFileSelect}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     disabled={status === "compressing" || status === "uploading"}
+                    aria-label="Upload image file"
+                    aria-describedby="upload-description"
                   />
+                  <span id="upload-description" className="sr-only">Upload JPG, PNG, or WEBP image files</span>
                   {status === "uploading" && (
                     <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center z-10">
-                      <LoaderIcon className="w-8 h-8 text-blue-500 mb-3" />
+                      <LoaderIcon className="w-8 h-8 text-blue-500 mb-3 animate-spin" />
                       <p className="text-sm font-medium text-slate-700 mb-2">
                         Processing...
                       </p>
-                      <div className="w-48 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div className="w-48 h-1.5 bg-slate-200 rounded-full overflow-hidden" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label={`Upload progress: ${progress}%`}>
                         <div
                           className="h-full bg-blue-500 transition-all duration-150 ease-out"
                           style={{ width: `${progress}%` }}
@@ -276,8 +282,23 @@ export default function ImageCompressorTool({
                   )}
                   {preview ? (
                     <div className="p-4 w-full h-full flex flex-col">
-                      <button onClick={(e) => { e.stopPropagation(); clearFile() }} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-900/70 hover:bg-slate-900 text-white flex items-center justify-center transition-colors z-10" disabled={status === "compressing"}><XIcon /></button>
-                      <div className="flex-1 flex items-center justify-center p-2"><img src={preview} alt="Preview" className="max-w-full max-h-[160px] sm:max-h-[200px] object-contain rounded-lg shadow-md" loading="eager" /></div>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); clearFile() }} 
+                        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-900/70 hover:bg-slate-900 text-white flex items-center justify-center transition-colors z-10" 
+                        disabled={status === "compressing"}
+                        aria-label="Remove uploaded image"
+                      >
+                        <XIcon />
+                      </button>
+                      <div className="flex-1 flex items-center justify-center p-2">
+                        <img 
+                          src={preview} 
+                          alt={`Preview of ${file?.name || 'uploaded image'}`} 
+                          className="max-w-full max-h-[160px] sm:max-h-[200px] object-contain rounded-lg shadow-md" 
+                          loading="eager"
+                          decoding="async"
+                        />
+                      </div>
                       <div className="flex items-center gap-3 pt-3 border-t border-slate-100 mt-2">
                         <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0"><ImageIcon className="w-4 h-4 text-slate-500" /></div>
                         <div className="flex-1 min-w-0"><p className="text-sm font-medium text-slate-700 truncate">{file?.name}</p><div className="flex items-center gap-2 text-xs"><span className="text-slate-400">{formatFileSize(file?.size || 0)}</span>{status === "done" && compressedSize && (<><span className="text-slate-300">→</span><span className="text-green-600 font-medium">{formatFileSize(compressedSize)}</span></>)}</div></div>
@@ -306,7 +327,12 @@ export default function ImageCompressorTool({
                       onChange={(e) => setTargetSize(e.target.value)}
                       className="w-full h-12 px-4 pr-14 rounded-xl border-2 border-slate-200 bg-white text-slate-800 placeholder:text-slate-400 font-medium focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-150"
                       disabled={status === "compressing"}
+                      aria-label="Target file size in KB"
+                      aria-describedby="target-size-description"
+                      min="1"
+                      step="1"
                     />
+                    <span id="target-size-description" className="sr-only">Enter the target file size in kilobytes (KB)</span>
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-semibold">
                       KB
                     </span>
@@ -321,8 +347,15 @@ export default function ImageCompressorTool({
                     {quickSizes.map((size) => {
                       const isSelected = targetSize === String(size.value)
                       return (
-                        <button key={size.value} onClick={() => setTargetSize(String(size.value))} disabled={status === "compressing"} className={`relative px-2 py-2 rounded-lg text-sm font-medium transition-all duration-100 ${isSelected ? "bg-blue-600 text-white shadow-md" : "bg-slate-100 text-slate-600 hover:bg-slate-200"} disabled:opacity-50`}>
-                          {isSelected && (<span className="absolute top-1 right-1"><CheckIcon className="w-2.5 h-2.5" /></span>)}
+                        <button 
+                          key={size.value} 
+                          onClick={() => setTargetSize(String(size.value))} 
+                          disabled={status === "compressing"} 
+                          className={`relative px-2 py-2 rounded-lg text-sm font-medium transition-all duration-100 ${isSelected ? "bg-blue-600 text-white shadow-md" : "bg-slate-100 text-slate-600 hover:bg-slate-200"} disabled:opacity-50`}
+                          aria-label={`Set target size to ${size.label}`}
+                          aria-pressed={isSelected}
+                        >
+                          {isSelected && (<span className="absolute top-1 right-1" aria-hidden="true"><CheckIcon className="w-2.5 h-2.5" /></span>)}
                           {size.label}
                         </button>
                       )
@@ -338,6 +371,8 @@ export default function ImageCompressorTool({
                       ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98]"
                       : "bg-slate-100 text-slate-400 cursor-not-allowed"
                   }`}
+                  aria-label={status === "done" ? "Download compressed image" : status === "compressing" ? `Compressing image, ${progress}% complete` : "Compress image to target size"}
+                  aria-busy={status === "compressing"}
                 >
                   {status === "compressing" && (
                     <div
@@ -348,7 +383,7 @@ export default function ImageCompressorTool({
                   <span className="relative flex items-center gap-2.5">
                     {status === "compressing" ? (
                       <>
-                        <LoaderIcon className="w-5 h-5" />
+                        <LoaderIcon className="w-5 h-5 animate-spin" />
                         <span>Compressing... {progress}%</span>
                       </>
                     ) : status === "done" ? (
