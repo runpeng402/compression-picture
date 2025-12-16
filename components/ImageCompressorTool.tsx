@@ -248,7 +248,8 @@ export default function ImageCompressorTool({
                     setIsDragging(true)
                   }}
                   onDragLeave={() => setIsDragging(false)}
-                  className={`relative rounded-xl border-2 border-dashed transition-all duration-150 cursor-pointer overflow-hidden min-h-[220px] sm:min-h-[280px] flex items-center justify-center ${
+                  data-upload-area
+                  className={`relative rounded-xl border-2 border-dashed transition-all duration-150 cursor-pointer overflow-hidden h-[280px] sm:h-[320px] flex items-center justify-center ${
                     isDragging
                       ? "border-blue-500 bg-blue-50/80"
                       : file
@@ -291,12 +292,16 @@ export default function ImageCompressorTool({
                         <XIcon />
                       </button>
                       <div className="flex-1 flex items-center justify-center p-2">
+                        {/* ✅ 性能优化：为图片设置宽高和 aspect-ratio，防止 CLS */}
                         <img 
                           src={preview} 
                           alt={`Preview of ${file?.name || 'uploaded image'}`} 
                           className="max-w-full max-h-[160px] sm:max-h-[200px] object-contain rounded-lg shadow-md" 
                           loading="eager"
                           decoding="async"
+                          width="400"
+                          height="300"
+                          style={{ aspectRatio: '4/3' }}
                         />
                       </div>
                       <div className="flex items-center gap-3 pt-3 border-t border-slate-100 mt-2">

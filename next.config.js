@@ -44,6 +44,12 @@ const nextConfig = {
   compress: true, // 启用 gzip 压缩
   poweredByHeader: false, // 移除 X-Powered-By 头
   reactStrictMode: true, // 启用 React 严格模式
+  swcMinify: true, // 使用 SWC 压缩（Next.js 13+ 默认启用，确保启用）
+  
+  // 7. ✅ 性能优化：实验性功能 - 优化字体加载
+  experimental: {
+    optimizeFonts: true, // 优化字体加载
+  },
 };
 
 module.exports = nextConfig;
