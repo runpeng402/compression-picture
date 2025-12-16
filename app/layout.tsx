@@ -37,10 +37,17 @@ export default function RootLayout({
           __html: `
             /* 防止布局偏移 - 关键样式 */
             * { box-sizing: border-box; }
-            body { margin: 0; padding: 0; }
+            html, body { 
+              margin: 0; 
+              padding: 0; 
+              width: 100%;
+              overflow-x: hidden;
+            }
             
-            /* 字体回退 - 防止 FOIT/FOUT */
-            body { 
+            /* ✅ 关键：防止 body 元素导致的 CLS - 设置固定尺寸和 containment */
+            body {
+              min-height: 100vh;
+              contain: layout style paint;
               font-family: var(--font-inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif);
             }
             
@@ -49,12 +56,14 @@ export default function RootLayout({
               max-width: 100%; 
               height: auto; 
               display: block;
+              contain: layout;
             }
             
             /* 防止动态内容导致的布局偏移 */
             [data-upload-area] {
               min-height: 280px;
               height: 280px;
+              contain: layout;
             }
             @media (min-width: 640px) {
               [data-upload-area] {
@@ -75,6 +84,11 @@ export default function RootLayout({
                 animation-iteration-count: 1 !important;
                 transition-duration: 0.01ms !important;
               }
+            }
+            
+            /* ✅ 关键：为所有主要容器设置 containment，减少布局偏移 */
+            main, section, header, footer {
+              contain: layout;
             }
           `
         }} />

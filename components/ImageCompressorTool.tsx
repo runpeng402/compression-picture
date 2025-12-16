@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useCallback, useEffect, memo } from "react"
+import React, { useState, useCallback, useEffect, memo, useRef } from "react"
 // ✅ 性能优化：使用 lucide-react 图标库，减少 bundle 大小（tree-shaking 支持）
 import { 
   Upload as UploadIcon, 
@@ -433,98 +433,108 @@ export default function ImageCompressorTool({
         </div>
       </main>
 
-      <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-12">
-        <h2 className="text-lg font-semibold text-slate-800 mb-6">
-          Popular Compressions
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
-          <div>
-            <h3 className="text-sm font-medium text-slate-700 mb-3">
-              Popular Sizes (Exact KB / MB)
-            </h3>
-            <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-sm">
-              {[
-                "5KB",
-                "8KB",
-                "10KB",
-                "15KB",
-                "20KB",
-                "30KB",
-                "40KB",
-                "50KB",
-                "60KB",
-                "70KB",
-                "80KB",
-                "90KB",
-                "100KB",
-                "150KB",
-                "200KB",
-                "250KB",
-                "300KB",
-                "400KB",
-                "500KB",
-                "600KB",
-                "800KB",
-                "900KB",
-                "1MB",
-                "2MB",
-                "5MB",
-                "10MB",
-              ].map((size, index, arr) => {
-                const numericPart = parseInt(size)
-                const unit = size.toLowerCase().includes("mb") ? "mb" : "kb"
-                const href = `/compress-to-${numericPart}${unit}`
-
-                return (
-                  <span key={size} className="inline-flex items-center">
-                    <a
-                      href={href}
-                      className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                    >
-                      {size}
-                    </a>
-                    {index < arr.length - 1 && (
-                      <span className="text-slate-300 mx-1.5">|</span>
-                    )}
-                  </span>
-                )
-              })}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-medium text-slate-700 mb-3">
-              Popular Formats
-            </h3>
-            <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-sm">
-              {[
-                { label: "JPG to 50KB", href: "/jpg-to-50kb" },
-                { label: "PNG to 50KB", href: "/png-to-50kb" },
-                { label: "Passport Photo Size", href: "/passport-photo-size" },
-                { label: "Visa Photo Compressor", href: "/visa-photo-compressor" },
-              ].map((item, index, arr) => (
-                <span key={item.label} className="inline-flex items-center">
-                  <a
-                    href={item.href}
-                    className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                  >
-                    {item.label}
-                  </a>
-                  {index < arr.length - 1 && (
-                    <span className="text-slate-300 mx-1.5">|</span>
-                  )}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ✅ 性能优化：延迟加载 Popular Compressions 部分，减少初始 CLS */}
+      <LazyPopularCompressions />
 
       <footer className="border-t border-slate-100 mt-auto">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 text-center text-xs text-slate-400">
           © 2025 PixSize — Exact Size Image Compression Tools.
         </div>
       </footer>
+    </div>
+  )
+}
+
+// ✅ 性能优化：延迟加载 Popular Compressions 部分，减少初始 CLS
+function LazyPopularCompressions() {
+  const [isVisible, setIsVisible] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!ref.current) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '100px' } // 提前 100px 开始加载
+    )
+
+    observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div ref={ref} style={{ minHeight: isVisible ? 'auto' : '200px' }}>
+      {isVisible ? (
+        <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-12">
+          <h2 className="text-lg font-semibold text-slate-800 mb-6">
+            Popular Compressions
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
+            <div>
+              <h3 className="text-sm font-medium text-slate-700 mb-3">
+                Popular Sizes (Exact KB / MB)
+              </h3>
+              <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-sm">
+                {[
+                  "5KB", "8KB", "10KB", "15KB", "20KB", "30KB", "40KB", "50KB",
+                  "60KB", "70KB", "80KB", "90KB", "100KB", "150KB", "200KB", "250KB",
+                  "300KB", "400KB", "500KB", "600KB", "800KB", "900KB", "1MB", "2MB",
+                  "5MB", "10MB",
+                ].map((size, index, arr) => {
+                  const numericPart = parseInt(size)
+                  const unit = size.toLowerCase().includes("mb") ? "mb" : "kb"
+                  const href = `/compress-to-${numericPart}${unit}`
+
+                  return (
+                    <span key={size} className="inline-flex items-center">
+                      <a
+                        href={href}
+                        className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                      >
+                        {size}
+                      </a>
+                      {index < arr.length - 1 && (
+                        <span className="text-slate-300 mx-1.5">|</span>
+                      )}
+                    </span>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium text-slate-700 mb-3">
+                Popular Formats
+              </h3>
+              <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-sm">
+                {[
+                  { label: "JPG to 50KB", href: "/jpg-to-50kb" },
+                  { label: "PNG to 50KB", href: "/png-to-50kb" },
+                  { label: "Passport Photo Size", href: "/passport-photo-size" },
+                  { label: "Visa Photo Compressor", href: "/visa-photo-compressor" },
+                ].map((item, index, arr) => (
+                  <span key={item.label} className="inline-flex items-center">
+                    <a
+                      href={item.href}
+                      className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                    >
+                      {item.label}
+                    </a>
+                    {index < arr.length - 1 && (
+                      <span className="text-slate-300 mx-1.5">|</span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
     </div>
   )
 }
