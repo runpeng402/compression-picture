@@ -18,3 +18,9 @@ pnpm-debug.log*
 # optional PWA generated files (only if you don't want to commit them)
 public/sw.js
 public/workbox-*.js
+# IDE Files
+.idea/
+.vscode/
+
+# macOS system files
+.DS_Store
