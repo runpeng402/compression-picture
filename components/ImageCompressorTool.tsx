@@ -1114,6 +1114,21 @@ export default function ImageCompressorTool({
                   </div>
                 </div>
 
+                {/* 初始状态按钮（没有图片时） */}
+                {((mode === "single" && !singleFile) || (mode === "batch" && files.length === 0)) && (
+                  <div className="mt-auto">
+                    <button
+                      disabled
+                      className="w-full h-14 rounded-xl font-semibold flex items-center justify-center gap-2.5 bg-blue-100 text-blue-400 cursor-not-allowed"
+                      aria-label="Upload images to enable compression"
+                    >
+                      <UploadIcon className="w-5 h-5" />
+                      <span>Upload to Compress</span>
+                    </button>
+                    <p className="text-xs text-slate-400 text-center mt-2">Select images to enable compression</p>
+                  </div>
+                )}
+
                 {/* 单张模式操作按钮 */}
                 {mode === "single" && singleFile && (
                   <button
@@ -1175,14 +1190,14 @@ export default function ImageCompressorTool({
                         {processingIds.size > 0 && files.length > 0 && (
                           <div
                             className="absolute inset-0 bg-blue-700/30 transition-all duration-100 ease-out"
-                            style={{ width: `${files.length > 0 ? (stats.processing / files.length) * 100 : 0}%` }}
+                            style={{ width: `${files.length > 0 ? ((stats.success + stats.failed) / files.length) * 100 : 0}%` }}
                           />
                         )}
                         <span className="relative flex items-center gap-2.5">
                           {processingIds.size > 0 ? (
                             <>
                               <LoaderIcon className="w-5 h-5 animate-spin" />
-                              <span>Processing... ({stats.processing}/{files.length})</span>
+                              <span>Processing...</span>
                             </>
                           ) : (
                             <>
