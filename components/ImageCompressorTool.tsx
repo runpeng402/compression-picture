@@ -32,8 +32,11 @@ const loadImageCompression = async () => {
 const MAX_CONCURRENT = 3 // 并发处理数量
 const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
 const MAX_FILES = 100 // 最多支持100张图片
-const MIN_FILES = 2 // 至少需要2张图片才能开始处理
+const MIN_FILES_BATCH = 2 // 批量模式至少需要2张图片
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
+
+// 处理模式类型
+type ProcessingMode = "single" | "batch"
 
 // 文件项状态类型
 type FileStatus = "pending" | "processing" | "success" | "error" | "paused"
@@ -62,6 +65,8 @@ export default function ImageCompressorTool({
   titleOverride,
   descriptionOverride,
 }: ImageCompressorProps) {
+  // 处理模式：默认单张模式
+  const [mode, setMode] = useState<ProcessingMode>("single")
   const [files, setFiles] = useState<FileItem[]>([])
   const [targetSize, setTargetSize] = useState(initialTargetSize)
   const [isDragging, setIsDragging] = useState(false)
@@ -69,6 +74,10 @@ export default function ImageCompressorTool({
   const [isGeneratingZip, setIsGeneratingZip] = useState(false)
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set())
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map())
+  const processFileItemRef = useRef<((fileItem: FileItem) => Promise<void>) | null>(null)
+
+  // 单张模式的单独状态（用于单张模式的简洁UI）
+  const [singleFile, setSingleFile] = useState<FileItem | null>(null)
 
   useEffect(() => {
     if (initialTargetSize) setTargetSize(initialTargetSize)
@@ -91,19 +100,112 @@ export default function ImageCompressorTool({
     }
   }, [initialTargetSize])
 
-  // 当目标大小改变时，更新所有待处理文件的目标大小
-  useEffect(() => {
-    setFiles(prev => prev.map(f => 
-      f.status === "pending" || f.status === "error" 
-        ? { ...f, targetSize: targetSize ? parseInt(targetSize) || 0 : 0 }
-        : f
-    ))
-  }, [targetSize])
+  // 模式切换处理
+  const handleModeChange = useCallback((newMode: ProcessingMode) => {
+    if (newMode === mode) return
 
-  // 自动开始处理队列
+    // 切换模式时处理现有文件
+    if (newMode === "single") {
+      // 切换到单张模式：只保留第一个文件
+      if (files.length > 0) {
+        const firstFile = files[0]
+        setSingleFile(firstFile)
+        // 取消所有正在进行的处理
+        abortControllersRef.current.forEach(controller => controller.abort())
+        abortControllersRef.current.clear()
+        setProcessingIds(new Set())
+        // 清理其他文件的预览 URL
+        files.slice(1).forEach(f => {
+          if (f.previewUrl && f.previewUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(f.previewUrl)
+          }
+        })
+        // 确保 files 只包含第一个文件
+        setFiles([firstFile])
+      } else if (singleFile) {
+        // 如果 files 为空但 singleFile 存在，同步到 files
+        setFiles([singleFile])
+      }
+    } else {
+      // 切换到批量模式：如果有单张文件但 files 为空，同步到 files
+      if (singleFile && files.length === 0) {
+        setFiles([singleFile])
+      }
+      // singleFile 保持，因为 files 已经包含了
+    }
+
+    setMode(newMode)
+    setGlobalError(null)
+  }, [mode, files, singleFile])
+
+  // 跟踪上一次的目标大小，用于检测尺寸是否真的改变了
+  const prevTargetSizeRef = useRef<string>(targetSize)
+  
+  // 当目标大小改变时，更新所有待处理文件的目标大小，如果文件已完成则重置状态
   useEffect(() => {
-    processQueue()
-  }, [files, targetSize])
+    // 如果目标大小没有改变，不执行
+    if (prevTargetSizeRef.current === targetSize) return
+    
+    const newTargetSize = targetSize ? parseInt(targetSize) || 0 : 0
+    
+    if (mode === "batch") {
+      setFiles(prev => prev.map(f => {
+        // 如果状态是 success，改变尺寸后重置为 pending（清空旧结果）
+        if (f.status === "success") {
+          return {
+            ...f,
+            status: "pending" as FileStatus,
+            targetSize: newTargetSize,
+            compressedBlob: undefined,
+            compressedSize: undefined,
+            progress: 0,
+            error: undefined
+          }
+        }
+        // 如果状态是 pending 或 error，只更新目标大小
+        if (f.status === "pending" || f.status === "error") {
+          return { ...f, targetSize: newTargetSize }
+        }
+        // 如果正在处理中，不改变状态
+        return f
+      }))
+    } else if (mode === "single") {
+      // 单张模式：使用函数式更新避免依赖 singleFile，同时更新 files
+      setFiles(prev => {
+        if (prev.length === 0) return prev
+        const file = prev[0]
+        // 如果状态是 success，改变尺寸后重置为 pending
+        if (file.status === "success") {
+          const updated = {
+            ...file,
+            status: "pending" as FileStatus,
+            targetSize: newTargetSize,
+            compressedBlob: undefined,
+            compressedSize: undefined,
+            progress: 0,
+            error: undefined
+          }
+          // 同步更新 singleFile
+          setSingleFile(updated)
+          return [updated]
+        }
+        // 如果状态是 pending 或 error，只更新目标大小
+        if (file.status === "pending" || file.status === "error") {
+          const updated = { ...file, targetSize: newTargetSize }
+          // 同步更新 singleFile
+          setSingleFile(updated)
+          return [updated]
+        }
+        // 如果正在处理中，不改变状态
+        return prev
+      })
+    }
+    
+    // 更新上一次的目标大小
+    prevTargetSizeRef.current = targetSize
+  }, [targetSize, mode])
+
+  // 不再自动处理，改为手动点击"Compress Now"触发
 
   // --- 文案逻辑 ---
   const getIntroText = () => {
@@ -112,10 +214,19 @@ export default function ImageCompressorTool({
     if (targetSize) {
       const sizeNum = parseInt(targetSize);
       const displaySize = sizeNum >= 1000 ? `${sizeNum / 1024}MB` : `${sizeNum}KB`;
-      return `Batch compress images to exactly ${displaySize}? PixSize helps you reduce multiple JPG/PNG files at once (minimum ${MIN_FILES} files) for web uploads, exams, and forms while maintaining quality.`;
+      
+      if (mode === "single") {
+        return `Compress an image to exactly ${displaySize}? PixSize helps you reduce JPG/PNG file sizes for web uploads, exams, and forms while maintaining quality.`;
+      } else {
+        return `Batch compress images to exactly ${displaySize}? PixSize helps you reduce multiple JPG/PNG files at once (minimum ${MIN_FILES_BATCH} files) for web uploads, exams, and forms while maintaining quality.`;
+      }
     }
 
-    return `Batch image compression powered by PixSize — compress multiple images (minimum ${MIN_FILES} files) to an exact file size in KB or MB while keeping them clear and usable.`;
+    if (mode === "single") {
+      return "Precise image compression powered by PixSize — reduce any image to an exact file size in KB or MB while keeping it clear and usable.";
+    } else {
+      return `Batch image compression powered by PixSize — compress multiple images (minimum ${MIN_FILES_BATCH} files) to an exact file size in KB or MB while keeping them clear and usable.`;
+    }
   };
 
   // 文件验证
@@ -129,10 +240,58 @@ export default function ImageCompressorTool({
     return null
   }
 
-  // 添加文件到列表
+  // 添加文件到列表（根据模式处理）
   const addFiles = useCallback((newFiles: FileList | File[]) => {
     const fileArray = Array.from(newFiles)
     
+    if (mode === "single") {
+      // 单张模式：只处理第一个文件
+      if (fileArray.length === 0) return
+      
+      const file = fileArray[0]
+      const error = validateFile(file)
+      if (error) {
+        setGlobalError(error)
+        setTimeout(() => setGlobalError(null), 5000)
+        return
+      }
+
+      // 如果已经有文件，先清理
+      if (singleFile?.previewUrl && singleFile.previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(singleFile.previewUrl)
+      }
+      if (files.length > 0 && files[0].previewUrl && files[0].previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(files[0].previewUrl)
+      }
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const previewUrl = e.target?.result as string
+        const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        
+        const newFileItem: FileItem = {
+          id,
+          file,
+          preview: previewUrl,
+          previewUrl,
+          targetSize: targetSize ? parseInt(targetSize) || 0 : 0,
+          status: "pending",
+          progress: 0,
+        }
+        
+        setSingleFile(newFileItem)
+        setFiles([newFileItem])
+        setGlobalError(null)
+      }
+      reader.onerror = () => {
+        setGlobalError(`Failed to read file "${file.name}"`)
+        setTimeout(() => setGlobalError(null), 5000)
+      }
+      reader.readAsDataURL(file)
+      return
+    }
+
+    // 批量模式：处理多个文件
     // 验证文件数量
     if (files.length + fileArray.length > MAX_FILES) {
       setGlobalError(`Maximum ${MAX_FILES} files allowed. You can add ${MAX_FILES - files.length} more files.`)
@@ -174,7 +333,7 @@ export default function ImageCompressorTool({
       setGlobalError(errors.join("\n"))
       setTimeout(() => setGlobalError(null), 7000)
     }
-  }, [files.length, targetSize])
+  }, [files.length, targetSize, mode])
 
   // 处理拖拽
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -223,8 +382,8 @@ export default function ImageCompressorTool({
         // Blob 会在移除时自动清理
       }
       
-      // 如果移除后文件数量少于最小值，取消所有正在进行的处理
-      if (newFiles.length < MIN_FILES) {
+      // 如果移除后文件数量少于批量模式最小值，取消所有正在进行的处理
+      if (mode === "batch" && newFiles.length < MIN_FILES_BATCH) {
         abortControllersRef.current.forEach(controller => controller.abort())
         abortControllersRef.current.clear()
         // 将所有处理中的文件重置为待处理状态
@@ -236,12 +395,20 @@ export default function ImageCompressorTool({
       return newFiles
     })
 
+    // 如果是单张模式，清空单张文件
+    if (mode === "single" && singleFile?.id === id) {
+      if (singleFile.previewUrl && singleFile.previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(singleFile.previewUrl)
+      }
+      setSingleFile(null)
+    }
+
     setProcessingIds(prev => {
       const next = new Set(prev)
       next.delete(id)
       return next
     })
-  }, [])
+  }, [mode, singleFile])
 
   // 清空所有文件
   const clearAllFiles = useCallback(() => {
@@ -256,10 +423,32 @@ export default function ImageCompressorTool({
       }
     })
 
+    if (singleFile?.previewUrl && singleFile.previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(singleFile.previewUrl)
+    }
+
     setFiles([])
+    setSingleFile(null)
     setProcessingIds(new Set())
     setGlobalError(null)
-  }, [files])
+  }, [files, singleFile])
+
+  // 单张模式下载
+  const handleSingleDownload = useCallback(() => {
+    if (!singleFile?.compressedBlob || !singleFile?.file) return
+    
+    const extension = singleFile.file.name.match(/\.[^/.]+$/)?.[0] || ".jpg"
+    const baseName = singleFile.file.name.replace(/\.[^/.]+$/, "")
+    const suffix = targetSize ? `-${targetSize}kb` : "_compressed"
+    const url = URL.createObjectURL(singleFile.compressedBlob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `${baseName}${suffix}${extension}`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, [singleFile, targetSize])
 
   // 压缩单个图片（复用原有逻辑）
   const compressImage = async (
@@ -403,36 +592,154 @@ export default function ImageCompressorTool({
       setProcessingIds(prev => {
         const next = new Set(prev)
         next.delete(fileItem.id)
+        
+        // 处理完成后，继续处理队列（批量模式）- 使用 ref 避免依赖循环
+        if (mode === "batch") {
+          setTimeout(() => {
+            // 检查是否还有待处理的文件
+            setFiles(currentFiles => {
+              const pendingFiles = currentFiles.filter(f => f.status === "pending" && f.targetSize > 0)
+              if (pendingFiles.length > 0) {
+                // 检查当前并发数量
+                const currentProcessingCount = abortControllersRef.current.size
+                if (currentProcessingCount < MAX_CONCURRENT && processFileItemRef.current) {
+                  // 继续处理下一个批次
+                  const needToProcess = Math.min(MAX_CONCURRENT - currentProcessingCount, pendingFiles.length)
+                  for (let i = 0; i < needToProcess; i++) {
+                    processFileItemRef.current(pendingFiles[i])
+                  }
+                }
+              }
+              return currentFiles
+            })
+          }, 50)
+        }
+        
         return next
       })
     }
-  }, [])
+  }, [mode])
 
-  // 处理队列（并发控制）
-  const processQueue = useCallback(() => {
-    if (!targetSize || parseInt(targetSize) <= 0) return
+  // 更新 ref，使 processFileItem 可以通过 ref 调用自己（避免依赖循环）
+  useEffect(() => {
+    processFileItemRef.current = processFileItem
+  }, [processFileItem])
 
-    // 验证最小文件数量：至少需要 2 张才能开始处理
-    const totalFiles = files.length
-    if (totalFiles < MIN_FILES) {
-      return // 文件数量不足，不开始处理
-    }
 
-    const pendingFiles = files.filter(f => f.status === "pending" && f.targetSize > 0)
-    const processingCount = processingIds.size
-
-    if (processingCount >= MAX_CONCURRENT || pendingFiles.length === 0) {
+  // 手动触发批量处理（点击"Compress Now"按钮）
+  const handleBatchCompress = useCallback(async () => {
+    if (mode !== "batch") return
+    if (!targetSize || parseInt(targetSize) <= 0) {
+      setGlobalError("Please enter a valid target size")
+      setTimeout(() => setGlobalError(null), 5000)
       return
     }
 
-    // 获取需要处理的文件数量
-    const needToProcess = Math.min(MAX_CONCURRENT - processingCount, pendingFiles.length)
-
-    // 开始处理
-    for (let i = 0; i < needToProcess; i++) {
-      processFileItem(pendingFiles[i])
+    // 验证最小文件数量
+    const totalFiles = files.length
+    if (totalFiles < MIN_FILES_BATCH) {
+      setGlobalError(`Please add at least ${MIN_FILES_BATCH} files to start batch processing. Currently you have ${totalFiles} file(s).`)
+      setTimeout(() => setGlobalError(null), 5000)
+      return
     }
-  }, [files, targetSize, processingIds.size, processFileItem])
+
+    // 重置所有错误状态的文件为待处理状态，并更新目标大小
+    setFiles(prev => prev.map(f => {
+      if (f.status === "error") {
+        return { ...f, status: "pending" as FileStatus, error: undefined, progress: 0, targetSize: parseInt(targetSize) || 0 }
+      }
+      if (f.status === "pending") {
+        return { ...f, targetSize: parseInt(targetSize) || 0 }
+      }
+      return f
+    }))
+
+    // 延迟一小段时间确保状态更新完成，然后开始处理第一批文件
+    setTimeout(() => {
+      setFiles(currentFiles => {
+        const pendingFiles = currentFiles.filter(f => f.status === "pending" && f.targetSize > 0)
+        if (pendingFiles.length > 0 && processFileItemRef.current) {
+          const processingCount = abortControllersRef.current.size
+          const needToProcess = Math.min(MAX_CONCURRENT - processingCount, pendingFiles.length)
+          for (let i = 0; i < needToProcess; i++) {
+            processFileItemRef.current(pendingFiles[i])
+          }
+        }
+        return currentFiles
+      })
+    }, 100)
+  }, [mode, targetSize, files])
+
+  // 单张模式处理
+  const handleSingleCompress = useCallback(async () => {
+    if (!singleFile || !targetSize) return
+    const target = parseInt(targetSize)
+    if (isNaN(target) || target <= 0) {
+      setGlobalError("Please enter a valid target size")
+      setTimeout(() => setGlobalError(null), 5000)
+      return
+    }
+
+    if (singleFile.status === "processing") return // 正在处理中
+
+    // 更新状态
+    setSingleFile(prev => prev ? { ...prev, status: "processing" as FileStatus, progress: 0, error: undefined } : null)
+    setFiles(prev => prev.map(f => 
+      f.id === singleFile.id 
+        ? { ...f, status: "processing" as FileStatus, progress: 0, error: undefined }
+        : f
+    ))
+
+    try {
+      const result = await compressImage(
+        singleFile.file,
+        target,
+        (progress) => {
+          setSingleFile(prev => prev ? { ...prev, progress } : null)
+          setFiles(prev => prev.map(f => 
+            f.id === singleFile.id ? { ...f, progress } : f
+          ))
+        }
+      )
+
+      // 成功
+      setSingleFile(prev => prev ? {
+        ...prev,
+        status: "success" as FileStatus,
+        progress: 100,
+        compressedBlob: result.blob,
+        compressedSize: result.compressedSize
+      } : null)
+      setFiles(prev => prev.map(f => 
+        f.id === singleFile.id 
+          ? { 
+              ...f, 
+              status: "success" as FileStatus, 
+              progress: 100, 
+              compressedBlob: result.blob,
+              compressedSize: result.compressedSize 
+            }
+          : f
+      ))
+    } catch (error: any) {
+      setSingleFile(prev => prev ? {
+        ...prev,
+        status: "error" as FileStatus,
+        error: error?.message || "Failed to compress image. Please try again.",
+        progress: 0
+      } : null)
+      setFiles(prev => prev.map(f => 
+        f.id === singleFile.id 
+          ? { 
+              ...f, 
+              status: "error" as FileStatus, 
+              error: error?.message || "Failed to compress image. Please try again.",
+              progress: 0
+            }
+          : f
+      ))
+    }
+  }, [singleFile, targetSize])
 
   // 重试单个文件
   const retryFile = useCallback((id: string) => {
@@ -516,15 +823,35 @@ export default function ImageCompressorTool({
     { value: 2048, label: "2 MB" }
   ]
 
-  const features = [
+  const features = mode === "single" ? [
+    { icon: TargetIcon, title: "Exact Size Control", desc: "Set a precise KB/MB target" },
+    { icon: ZapIcon, title: "Lightning Fast", desc: "Compress in just a few seconds" },
+    { icon: ShieldIcon, title: "100% Private", desc: "Processing happens in your browser" },
+    { icon: DownloadIcon, title: "Instant Download", desc: "No signup, no waiting" }
+  ] : [
     { icon: TargetIcon, title: "Batch Processing", desc: "Process multiple images at once" },
     { icon: ZapIcon, title: "Lightning Fast", desc: "Concurrent processing (3 files)" },
     { icon: ShieldIcon, title: "100% Private", desc: "Processing happens in your browser" },
     { icon: ArchiveIcon, title: "Batch Download", desc: "Download all as ZIP" }
   ]
 
-  const canStartProcessing = files.length >= MIN_FILES && targetSize && parseInt(targetSize) > 0
-  const hasSuccessFiles = stats.success > 0
+  const canStartProcessing = mode === "single" 
+    ? (singleFile && targetSize && parseInt(targetSize) > 0 && singleFile.status !== "processing")
+    : (files.length >= MIN_FILES_BATCH && targetSize && parseInt(targetSize) > 0)
+  const hasSuccessFiles = mode === "single"
+    ? (singleFile?.status === "success")
+    : (stats.success > 0)
+  
+  // 批量模式：是否有待处理的文件（包括错误状态的文件）
+  const hasPendingOrErrorFiles = mode === "batch" && files.length > 0 && files.some(f => f.status === "pending" || f.status === "error")
+  
+  // 批量模式：是否可以开始处理（有文件、有目标大小、不在处理中）
+  const canStartBatchProcessing = mode === "batch" && 
+    files.length >= MIN_FILES_BATCH && 
+    hasPendingOrErrorFiles && 
+    targetSize && 
+    parseInt(targetSize) > 0 && 
+    processingIds.size === 0
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex flex-col">
@@ -537,7 +864,7 @@ export default function ImageCompressorTool({
             <span className="font-semibold text-slate-900">PixSize</span>
           </div>
           <span className="text-xs text-slate-400 font-medium hidden sm:block">
-            Batch Image Compression
+            {mode === "single" ? "Image Compression" : "Batch Image Compression"}
           </span>
         </div>
       </header>
@@ -549,11 +876,39 @@ export default function ImageCompressorTool({
             No signup required
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-3 tracking-tight">
-            {titleOverride || "Batch Compress Images to Exact Size (KB or MB)"}
+            {titleOverride || (mode === "single" ? "Compress Images to Exact Size (KB or MB)" : "Batch Compress Images to Exact Size (KB or MB)")}
           </h1>
-          <p className="text-slate-500 text-sm sm:text-base max-w-md mx-auto">
+          <p className="text-slate-500 text-sm sm:text-base max-w-md mx-auto mb-6">
             {getIntroText()}
           </p>
+
+          {/* 模式切换器 */}
+          <div className="inline-flex items-center gap-2 p-1 bg-slate-100 rounded-lg">
+            <button
+              onClick={() => handleModeChange("single")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                mode === "single"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+              aria-label="Switch to single image mode"
+              aria-pressed={mode === "single"}
+            >
+              Single Image
+            </button>
+            <button
+              onClick={() => handleModeChange("batch")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                mode === "batch"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+              aria-label="Switch to batch processing mode"
+              aria-pressed={mode === "batch"}
+            >
+              Batch Processing
+            </button>
+          </div>
         </div>
 
         {globalError && (
@@ -563,11 +918,11 @@ export default function ImageCompressorTool({
           </div>
         )}
 
-        {files.length > 0 && files.length < MIN_FILES && (
+        {mode === "batch" && files.length > 0 && files.length < MIN_FILES_BATCH && (
           <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3" role="alert">
             <AlertIcon className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-sm text-amber-800">
-              Please add at least {MIN_FILES} files to start batch processing. Currently you have {files.length} file(s).
+              Please add at least {MIN_FILES_BATCH} files to start batch processing. Currently you have {files.length} file(s).
             </p>
           </div>
         )}
@@ -585,10 +940,12 @@ export default function ImageCompressorTool({
                   }}
                   onDragLeave={() => setIsDragging(false)}
                   data-upload-area
-                  className={`relative rounded-xl border-2 border-dashed transition-all duration-150 cursor-pointer overflow-hidden h-[200px] sm:h-[240px] flex items-center justify-center ${
+                  className={`relative rounded-xl border-2 border-dashed transition-all duration-150 cursor-pointer overflow-hidden ${
+                    mode === "single" ? "h-[280px] sm:h-[320px]" : "h-[200px] sm:h-[240px]"
+                  } flex items-center justify-center ${
                     isDragging
                       ? "border-blue-500 bg-blue-50/80"
-                      : files.length > 0
+                      : (mode === "single" ? singleFile : files.length > 0)
                       ? "border-slate-200 bg-slate-50/50"
                       : "border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 group"
                   }`}
@@ -597,26 +954,96 @@ export default function ImageCompressorTool({
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     onChange={handleFileSelect}
-                    multiple
+                    multiple={mode === "batch"}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    disabled={isGeneratingZip}
-                    aria-label="Upload image files"
+                    disabled={isGeneratingZip || (mode === "single" && singleFile?.status === "processing")}
+                    aria-label={mode === "single" ? "Upload image file" : "Upload image files"}
                     aria-describedby="upload-description"
                   />
-                  <span id="upload-description" className="sr-only">Upload multiple JPG, PNG, or WEBP image files (minimum {MIN_FILES} files, up to {MAX_FILES} files, {formatFileSize(MAX_FILE_SIZE)} each)</span>
+                  <span id="upload-description" className="sr-only">
+                    {mode === "single" 
+                      ? `Upload JPG, PNG, or WEBP image file (max ${formatFileSize(MAX_FILE_SIZE)})`
+                      : `Upload multiple JPG, PNG, or WEBP image files (minimum ${MIN_FILES_BATCH} files, up to ${MAX_FILES} files, ${formatFileSize(MAX_FILE_SIZE)} each)`
+                    }
+                  </span>
                   
-                  <div className="text-center p-6">
-                    <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl mx-auto flex items-center justify-center mb-4 transition-all duration-150 ${
-                      isDragging ? "bg-blue-500 text-white scale-110" : "bg-slate-100 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-500"
-                    }`}>
-                      <UploadIcon className="w-6 h-6 sm:w-7 sm:h-7" />
+                  {mode === "single" && singleFile ? (
+                    <div className="p-4 w-full h-full flex flex-col">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); removeFile(singleFile.id) }} 
+                        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-900/70 hover:bg-slate-900 text-white flex items-center justify-center transition-colors z-10" 
+                        disabled={singleFile.status === "processing"}
+                        aria-label="Remove uploaded image"
+                      >
+                        <XIcon className="w-5 h-5" />
+                      </button>
+                      <div className="flex-1 flex items-center justify-center p-2">
+                        <img 
+                          src={singleFile.preview} 
+                          alt={`Preview of ${singleFile.file.name}`} 
+                          className="max-w-full max-h-[160px] sm:max-h-[200px] object-contain rounded-lg shadow-md" 
+                          loading="eager"
+                          decoding="async"
+                          width="400"
+                          height="300"
+                          style={{ aspectRatio: '4/3' }}
+                        />
+                      </div>
+                      <div className="flex items-center gap-3 pt-3 border-t border-slate-100 mt-2">
+                        <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                          <ImageIcon className="w-4 h-4 text-slate-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-700 truncate">{singleFile.file.name}</p>
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-slate-400">{formatFileSize(singleFile.file.size)}</span>
+                            {singleFile.status === "success" && singleFile.compressedSize && (
+                              <>
+                                <span className="text-slate-300">→</span>
+                                <span className="text-green-600 font-medium">{formatFileSize(singleFile.compressedSize)}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      {singleFile.status === "processing" && (
+                        <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mt-3">
+                          <div
+                            className="h-full bg-blue-500 transition-all duration-150 ease-out"
+                            style={{ width: `${singleFile.progress}%` }}
+                          />
+                        </div>
+                      )}
+                      {singleFile.error && (
+                        <p className="text-xs text-red-600 mt-2">{singleFile.error}</p>
+                      )}
                     </div>
-                    <p className="font-semibold text-slate-800 mb-1">
-                      {isDragging ? "Drop files here!" : files.length > 0 ? `${files.length} file(s) selected` : "Drop your images here"}
-                    </p>
-                    <p className="text-sm text-slate-400 mb-2">or click to browse</p>
-                    <p className="text-xs text-slate-300">JPG, PNG, WEBP (Min {MIN_FILES} files, Max {formatFileSize(MAX_FILE_SIZE)} each, up to {MAX_FILES} files)</p>
-                  </div>
+                  ) : (
+                    <div className="text-center p-6">
+                      <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl mx-auto flex items-center justify-center mb-4 transition-all duration-150 ${
+                        isDragging ? "bg-blue-500 text-white scale-110" : "bg-slate-100 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-500"
+                      }`}>
+                        <UploadIcon className="w-6 h-6 sm:w-7 sm:h-7" />
+                      </div>
+                      <p className="font-semibold text-slate-800 mb-1">
+                        {isDragging 
+                          ? "Drop it here!" 
+                          : mode === "single" 
+                            ? "Drop your image here" 
+                            : files.length > 0 
+                              ? `${files.length} file(s) selected` 
+                              : "Drop your images here"
+                        }
+                      </p>
+                      <p className="text-sm text-slate-400 mb-2">or click to browse</p>
+                      <p className="text-xs text-slate-300">
+                        {mode === "single" 
+                          ? `JPG, PNG, WEBP (Max ${formatFileSize(MAX_FILE_SIZE)})`
+                          : `JPG, PNG, WEBP (Min ${MIN_FILES_BATCH} files, Max ${formatFileSize(MAX_FILE_SIZE)} each, up to ${MAX_FILES} files)`
+                        }
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -624,7 +1051,7 @@ export default function ImageCompressorTool({
               <div className="flex-1 flex flex-col gap-5">
                 <div>
                   <label className="block text-sm font-semibold text-slate-800 mb-3">
-                    Target Size (applied to all files)
+                    Target Size{mode === "batch" ? " (applied to all files)" : ""}
                   </label>
                   <div className="relative mb-3">
                     <input
@@ -633,13 +1060,15 @@ export default function ImageCompressorTool({
                       value={targetSize}
                       onChange={(e) => setTargetSize(e.target.value)}
                       className="w-full h-12 px-4 pr-14 rounded-xl border-2 border-slate-200 bg-white text-slate-800 placeholder:text-slate-400 font-medium focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-150"
-                      disabled={isGeneratingZip}
+                      disabled={isGeneratingZip || (mode === "single" && singleFile?.status === "processing")}
                       aria-label="Target file size in KB"
                       aria-describedby="target-size-description"
                       min="1"
                       step="1"
                     />
-                    <span id="target-size-description" className="sr-only">Enter the target file size in kilobytes (KB) for all files</span>
+                    <span id="target-size-description" className="sr-only">
+                      {mode === "single" ? "Enter the target file size in kilobytes (KB)" : "Enter the target file size in kilobytes (KB) for all files"}
+                    </span>
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-semibold">
                       KB
                     </span>
@@ -656,7 +1085,7 @@ export default function ImageCompressorTool({
                           <button 
                             key={size.value} 
                             onClick={() => setTargetSize(String(size.value))} 
-                            disabled={isGeneratingZip} 
+                            disabled={isGeneratingZip || (mode === "single" && singleFile?.status === "processing")} 
                             className={`relative px-2 py-2 rounded-lg text-sm font-medium transition-all duration-100 ${
                               isSelected ? "bg-blue-600 text-white shadow-md" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                             } disabled:opacity-50`}
@@ -676,43 +1105,131 @@ export default function ImageCompressorTool({
                   </div>
                 </div>
 
-                {/* 批量操作按钮 */}
-                {files.length > 0 && (
-                  <div className="flex flex-wrap gap-3">
-                    {hasSuccessFiles && (
+                {/* 单张模式操作按钮 */}
+                {mode === "single" && singleFile && (
+                  <button
+                    onClick={singleFile.status === "success" ? handleSingleDownload : handleSingleCompress}
+                    disabled={!canStartProcessing && singleFile.status !== "success"}
+                    className={`mt-auto h-14 rounded-xl font-semibold flex items-center justify-center gap-2.5 transition-all duration-150 relative overflow-hidden ${
+                      canStartProcessing || singleFile.status === "success"
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98]"
+                        : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                    }`}
+                    aria-label={singleFile.status === "success" ? "Download compressed image" : singleFile.status === "processing" ? `Compressing image, ${singleFile.progress}% complete` : "Compress image to target size"}
+                    aria-busy={singleFile.status === "processing"}
+                  >
+                    {singleFile.status === "processing" && (
+                      <div
+                        className="absolute inset-0 bg-blue-700/30 transition-all duration-100 ease-out"
+                        style={{ width: `${singleFile.progress}%` }}
+                      />
+                    )}
+                    <span className="relative flex items-center gap-2.5">
+                      {singleFile.status === "processing" ? (
+                        <>
+                          <LoaderIcon className="w-5 h-5 animate-spin" />
+                          <span>Compressing... {singleFile.progress}%</span>
+                        </>
+                      ) : singleFile.status === "success" ? (
+                        <>
+                          <DownloadIcon className="w-5 h-5" />
+                          <span>Download Result</span>
+                        </>
+                      ) : (
+                        <>
+                          <ZapIcon className="w-5 h-5" />
+                          <span>Compress Now</span>
+                        </>
+                      )}
+                    </span>
+                  </button>
+                )}
+
+                {/* 批量模式操作按钮 */}
+                {mode === "batch" && files.length > 0 && (
+                  <>
+                    {/* 批量模式的主按钮：Compress Now 或 Download All */}
+                    {/* 如果所有文件都处理完成，显示 Download 按钮；否则显示 Compress Now 按钮 */}
+                    {hasPendingOrErrorFiles ? (
+                      // 有待处理的文件：显示 Compress Now 按钮
+                      <button
+                        onClick={handleBatchCompress}
+                        disabled={!canStartBatchProcessing}
+                        className={`mt-auto h-14 rounded-xl font-semibold flex items-center justify-center gap-2.5 transition-all duration-150 relative overflow-hidden ${
+                          canStartBatchProcessing
+                            ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98]"
+                            : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                        }`}
+                        aria-label={processingIds.size > 0 ? `Processing ${processingIds.size} files...` : canStartBatchProcessing ? "Start batch compression" : "Cannot start batch compression"}
+                        aria-busy={processingIds.size > 0}
+                      >
+                        {processingIds.size > 0 && files.length > 0 && (
+                          <div
+                            className="absolute inset-0 bg-blue-700/30 transition-all duration-100 ease-out"
+                            style={{ width: `${files.length > 0 ? (stats.processing / files.length) * 100 : 0}%` }}
+                          />
+                        )}
+                        <span className="relative flex items-center gap-2.5">
+                          {processingIds.size > 0 ? (
+                            <>
+                              <LoaderIcon className="w-5 h-5 animate-spin" />
+                              <span>Processing... ({stats.processing}/{files.length})</span>
+                            </>
+                          ) : (
+                            <>
+                              <ZapIcon className="w-5 h-5" />
+                              <span>Compress Now</span>
+                            </>
+                          )}
+                        </span>
+                      </button>
+                    ) : hasSuccessFiles ? (
+                      // 所有文件都处理完成：显示 Download All 按钮
                       <button
                         onClick={handleBatchDownload}
-                        disabled={isGeneratingZip}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isGeneratingZip || processingIds.size > 0}
+                        className={`mt-auto h-14 rounded-xl font-semibold flex items-center justify-center gap-2.5 transition-all duration-150 relative overflow-hidden ${
+                          !isGeneratingZip && processingIds.size === 0
+                            ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/30 active:scale-[0.98]"
+                            : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                        }`}
+                        aria-label="Download all compressed images as ZIP"
+                        aria-busy={isGeneratingZip}
                       >
-                        {isGeneratingZip ? (
-                          <>
-                            <LoaderIcon className="w-4 h-4 animate-spin" />
-                            <span>Generating ZIP...</span>
-                          </>
-                        ) : (
-                          <>
-                            <ArchiveIcon className="w-4 h-4" />
-                            <span>Download All as ZIP ({stats.success} files)</span>
-                          </>
-                        )}
+                        <span className="relative flex items-center gap-2.5">
+                          {isGeneratingZip ? (
+                            <>
+                              <LoaderIcon className="w-5 h-5 animate-spin" />
+                              <span>Generating ZIP...</span>
+                            </>
+                          ) : (
+                            <>
+                              <DownloadIcon className="w-5 h-5" />
+                              <span>Download All ({stats.success} files)</span>
+                            </>
+                          )}
+                        </span>
+                      </button>
+                    ) : null}
+
+                    {/* 批量模式的辅助按钮：清空所有 */}
+                    {files.length > 0 && (
+                      <button
+                        onClick={clearAllFiles}
+                        disabled={isGeneratingZip || processingIds.size > 0}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-medium hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                        <span>Clear All</span>
                       </button>
                     )}
-                    <button
-                      onClick={clearAllFiles}
-                      disabled={isGeneratingZip || processingIds.size > 0}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-medium hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                      <span>Clear All</span>
-                    </button>
-                  </div>
+                  </>
                 )}
               </div>
             </div>
 
-            {/* 统计信息 */}
-            {files.length > 0 && (
+            {/* 批量模式：统计信息 */}
+            {mode === "batch" && files.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl my-6">
                 <div>
                   <p className="text-xs text-slate-500 mb-1">Total</p>
@@ -733,8 +1250,8 @@ export default function ImageCompressorTool({
               </div>
             )}
 
-            {/* 文件列表 */}
-            {files.length > 0 && (
+            {/* 批量模式：文件列表 */}
+            {mode === "batch" && files.length > 0 && (
               <div className="space-y-3 max-h-[600px] overflow-y-auto">
                 {files.map((fileItem) => (
                   <FileItemCard
@@ -749,10 +1266,18 @@ export default function ImageCompressorTool({
               </div>
             )}
 
-            {files.length === 0 && (
+            {/* 空状态提示 */}
+            {mode === "single" && !singleFile && (
               <div className="text-center py-8 text-slate-400">
                 <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">Add at least {MIN_FILES} images to start batch processing</p>
+                <p className="text-sm">Upload an image to start compression</p>
+              </div>
+            )}
+
+            {mode === "batch" && files.length === 0 && (
+              <div className="text-center py-8 text-slate-400">
+                <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">Add at least {MIN_FILES_BATCH} images to start batch processing</p>
               </div>
             )}
           </div>
