@@ -1026,22 +1026,31 @@ export default function ImageCompressorTool({
                         <UploadIcon className="w-6 h-6 sm:w-7 sm:h-7" />
                       </div>
                       <p className="font-semibold text-slate-800 mb-1">
-                        {isDragging 
-                          ? "Drop it here!" 
-                          : mode === "single" 
-                            ? "Drop your image here" 
-                            : files.length > 0 
-                              ? `${files.length} file(s) selected` 
+                        {isDragging
+                          ? "Drop it here!"
+                          : mode === "single"
+                            ? "Drop your image here"
+                            : files.length > 0
+                              ? `${files.length} file(s) selected`
                               : "Drop your images here"
                         }
                       </p>
                       <p className="text-sm text-slate-400 mb-2">or click to browse</p>
                       <p className="text-xs text-slate-300">
-                        {mode === "single" 
+                        {mode === "single"
                           ? `JPG, PNG, WEBP (Max ${formatFileSize(MAX_FILE_SIZE)})`
                           : `JPG, PNG, WEBP (Min ${MIN_FILES_BATCH} files, Max ${formatFileSize(MAX_FILE_SIZE)} each, up to ${MAX_FILES} files)`
                         }
                       </p>
+
+                      {/* 灰色占位提示框 */}
+                      <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <div className="flex items-center gap-2">
+                          <ImageIcon className="w-4 h-4 text-slate-300" />
+                          <p className="text-xs text-slate-400">example-image.jpg</p>
+                        </div>
+                        <p className="text-xs text-slate-300 mt-1 ml-6">KB → KB</p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1266,20 +1275,7 @@ export default function ImageCompressorTool({
               </div>
             )}
 
-            {/* 空状态提示 */}
-            {mode === "single" && !singleFile && (
-              <div className="text-center py-8 text-slate-400">
-                <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">Upload an image to start compression</p>
-              </div>
-            )}
 
-            {mode === "batch" && files.length === 0 && (
-              <div className="text-center py-8 text-slate-400">
-                <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">Add at least {MIN_FILES_BATCH} images to start batch processing</p>
-              </div>
-            )}
           </div>
 
           <div className="bg-slate-50/80 border-t border-slate-100 px-4 sm:px-6 lg:px-8 py-5">
