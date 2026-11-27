@@ -5,7 +5,7 @@ import {
   formatSizeLabel,
   getSizeHref,
 } from "@/lib/compressionSizes";
-import { SITE_NAME } from "@/lib/site";
+import { SITE_FORMER_NAME, SITE_NAME } from "@/lib/site";
 
 const LEGAL_LINKS = [
   { label: "About", href: "/about" },
@@ -56,7 +56,7 @@ export default function SiteFooter() {
       </section>
       <div className="border-t border-slate-100">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
-          <p>© {new Date().getFullYear()} {SITE_NAME}. Images are processed in your browser.</p>
+          <p>© {new Date().getFullYear()} {SITE_NAME} (formerly {SITE_FORMER_NAME}). Images are processed in your browser.</p>
           <nav aria-label="Site information">
             <ul className="flex flex-wrap items-center gap-4">
               {LEGAL_LINKS.map((item) => (

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 export const SITE_URL = "https://compresstokb.com";
 export const SITE_NAME = "CompressToKB";
+// Previous brand name; kept visible so people who search for it still find the site.
+export const SITE_FORMER_NAME = "PixSize";
 export const SITE_TAGLINE = "Compress images to an exact file size in KB or MB";
 
 // Shown on the Contact and Privacy pages; must be a mailbox that actually receives mail.
