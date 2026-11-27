@@ -1,6 +1,9 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import SiteHeader from '@/components/SiteHeader';
+import SiteFooter from '@/components/SiteFooter';
+import { SITE_NAME, SITE_URL } from '@/lib/site';
 
 // ✅ 性能优化：字体加载优化 - 减少 CLS 和 FCP
 const inter = Inter({ 
@@ -13,9 +16,15 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'ExactSize - Compress Image to Specific Size (KB) | Free Online Tool',
-  description: 'Free online image compression tool. Compress images to exact file sizes (KB) with precision. Supports JPG, PNG, WebP, GIF. No upload required, works in your browser.',
-  keywords: 'image compressor, compress image, reduce image size, image optimization, resize image, compress to kb',
+  metadataBase: new URL(SITE_URL),
+  title: `${SITE_NAME} – Compress Image to Exact Size in KB or MB`,
+  description: 'Free online tool to compress JPG, PNG and WebP images to an exact file size in KB or MB. Works in your browser, no upload or signup required.',
+  applicationName: SITE_NAME,
+  openGraph: {
+    siteName: SITE_NAME,
+    type: 'website',
+    locale: 'en_US',
+  },
 };
 
 export default function RootLayout({
@@ -82,15 +91,17 @@ export default function RootLayout({
                 transition-duration: 0.01ms !important;
               }
             }
-            
-            /* ✅ 关键：为延迟加载的内容预留空间，防止 CLS */
-            [data-lazy-content] {
-              min-height: 400px;
-            }
+
           `
         }} />
       </head>
-      <body className={`${inter.variable} ${inter.className}`}>{children}</body>
+      <body className={`${inter.variable} ${inter.className}`}>
+        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex flex-col">
+          <SiteHeader />
+          <div className="flex-1 flex flex-col">{children}</div>
+          <SiteFooter />
+        </div>
+      </body>
     </html>
   );
 }
