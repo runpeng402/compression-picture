@@ -5,7 +5,7 @@ export const SITE_NAME = "CompressToKB";
 export const SITE_TAGLINE = "Compress images to an exact file size in KB or MB";
 
 // Shown on the Contact and Privacy pages; must be a mailbox that actually receives mail.
-export const CONTACT_EMAIL = "support@compresstokb.com";
+export const CONTACT_EMAIL = "runpeng402@gmail.com";
 
 // Bump when page content changes; used as sitemap lastModified so crawlers see real update dates.
 export const CONTENT_UPDATED = "2026-11-27";
