@@ -1,118 +1,41 @@
-// app/png-to-50kb/page.tsx
 import { Metadata } from "next";
-import dynamic from "next/dynamic";
+import ImageCompressorTool from "@/components/ImageCompressorTool";
+import FaqSection, { FaqItem } from "@/components/FaqSection";
+import { SITE_NAME, buildPageMetadata } from "@/lib/site";
 
-const ImageCompressorTool = dynamic(
-  () => import("@/components/ImageCompressorTool"),
-  { ssr: false }
-);
-
-// -----------------------
-// Metadata（PixSize + PNG 专项增强版）
-// -----------------------
-export const metadata: Metadata = {
-  title: "Compress PNG to 50KB (Exact Size) – PixSize",
+export const metadata: Metadata = buildPageMetadata({
+  title: `Compress PNG to 50KB Online – Free, Exact Size | ${SITE_NAME}`,
   description:
-    "Use PixSize to compress PNG images to exactly 50KB. Ideal for web forms, UI icons, logos, transparent PNG uploads and systems that require strict PNG size limits.",
-  alternates: {
-    canonical: "https://compresstokb.com/png-to-50kb",
-  },
-  openGraph: {
-    title: "Compress PNG to 50KB – Exact PNG Size Tool | PixSize",
-    description:
-      "Free online PNG compressor by PixSize to reduce PNG images to exactly 50KB while keeping transparency and clarity whenever possible.",
-    url: "https://compresstokb.com/png-to-50kb",
-    type: "website",
-    images: [
-      {
-        url: "https://compresstokb.com/api/og?title=PNG+to+50KB&subtitle=Exact+Size+PNG+Compressor&size=50KB",
-        width: 1200,
-        height: 630,
-      },
-    ],
-  },
-};
+    "Compress PNG images to 50KB or less for logos, icons, screenshots and upload forms. Free, runs in your browser, no upload or signup.",
+  path: "/png-to-50kb",
+  ogTitle: "PNG to 50KB",
+  ogSize: "50KB",
+});
 
-// -----------------------
-// 页面主体
-// -----------------------
+const FAQ: FaqItem[] = [
+  {
+    q: "How do I compress a PNG to 50KB?",
+    a: "Upload your PNG, keep the target at 50KB and click Compress Now. The tool reduces the PNG and, if needed, its dimensions until it is 50KB or less.",
+  },
+  {
+    q: "Why is my PNG hard to get under 50KB?",
+    a: "PNG is a lossless format, so photos saved as PNG are often very large. Large photo-like PNGs may need to be scaled down to reach 50KB. If the form accepts JPG, a JPG version will keep more detail at the same size.",
+  },
+  {
+    q: "Is 50KB enough for logos or icons?",
+    a: "Usually yes. Logos, icons, buttons and simple graphics fit comfortably in 50KB at typical web dimensions.",
+  },
+  {
+    q: "Is my image uploaded?",
+    a: "No. Compression runs in your browser and the image never leaves your device.",
+  },
+];
+
 export default function PngTo50kbPage() {
-  const FAQ = [
-    {
-      q: "How do I compress a PNG to 50KB?",
-      a: "Upload your PNG image, set 50KB as the target size, and PixSize will automatically optimize the image so that the final file is as close as possible to 50KB.",
-    },
-    {
-      q: "Why do some platforms require 50KB PNG files?",
-      a: "Many design systems, dashboards and online forms restrict PNG size to around 50KB to keep interfaces fast, reduce bandwidth usage and ensure quick uploads.",
-    },
-    {
-      q: "Will compressing a PNG to 50KB remove transparency?",
-      a: "PixSize tries to preserve transparency where possible. However, very large PNGs with alpha channels may need stronger compression or resizing to hit 50KB.",
-    },
-    {
-      q: "Is 50KB enough for logos or UI icons?",
-      a: "Yes. 50KB is usually sufficient for web logos, buttons, UI icons and simple graphics, especially when the image dimensions are not too large.",
-    },
-  ];
-
-  const FAQ_SCHEMA = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: FAQ.map((item) => ({
-      "@type": "Question",
-      name: item.q,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.a,
-      },
-    })),
-  };
-
-  const jsonLdPage = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: "Compress PNG to 50KB – PixSize",
-    url: "https://compresstokb.com/png-to-50kb",
-    description:
-      "Free online tool by PixSize to compress PNG images to exactly 50KB for logos, UI icons and online PNG uploads that require strict file size limits.",
-  };
-
   return (
     <>
-      {/* JSON-LD 页面 Schema */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdPage) }}
-      />
-
-      {/* JSON-LD FAQ Schema */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
-      />
-
-      {/* 工具主体：默认目标 50KB，标题强调 PNG + Exact Size */}
-      <ImageCompressorTool
-        initialTargetSize="50"
-        titleOverride="Compress PNG to 50KB (Exact Size)"
-      />
-
-      {/* 页面 FAQ 文本内容（增强排名） */}
-      <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-12 mt-8">
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">
-          Frequently Asked Questions
-        </h2>
-
-        <div className="space-y-4 text-sm text-slate-600">
-          {FAQ.map((item, idx) => (
-            <div key={idx}>
-              <p className="font-medium text-slate-800">{item.q}</p>
-              <p className="mt-1">{item.a}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <ImageCompressorTool initialTargetSize="50" titleOverride="Compress PNG to 50KB" />
+      <FaqSection items={FAQ} />
     </>
   );
 }

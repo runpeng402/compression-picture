@@ -6,7 +6,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
 
   // 动态读取 ?title=xxx ?size=xxKB 等参数
-  const title = searchParams.get("title") || "ExactSize Image Compressor";
+  const title = searchParams.get("title") || "CompressToKB";
   const subtitle = searchParams.get("subtitle") || "";
   const size = searchParams.get("size") || "";
 
@@ -70,7 +70,7 @@ export async function GET(req: Request) {
             opacity: 0.9,
           }}
         >
-          ExactSize · Image Compressor
+          compresstokb.com
         </div>
       </div>
     ),

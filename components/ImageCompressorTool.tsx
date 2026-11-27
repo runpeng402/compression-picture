@@ -34,6 +34,7 @@ const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
 const MAX_FILES = 100 // 最多支持100张图片
 const MIN_FILES_BATCH = 2 // 批量模式至少需要2张图片
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
+const MIN_FALLBACK_DIMENSION = 64 // below this the image is no longer usable
 
 // 处理模式类型
 type ProcessingMode = "single" | "batch"
@@ -216,16 +217,16 @@ export default function ImageCompressorTool({
       const displaySize = sizeNum >= 1000 ? `${sizeNum / 1024}MB` : `${sizeNum}KB`;
       
       if (mode === "single") {
-        return `Compress an image to exactly ${displaySize}? PixSize helps you reduce JPG/PNG file sizes for web uploads, exams, and forms while maintaining quality.`;
+        return `Compress an image to ${displaySize} or less. Reduce JPG, PNG or WebP file size for web uploads, exams and forms while keeping it clear.`;
       } else {
-        return `Batch compress images to exactly ${displaySize}? PixSize helps you reduce multiple JPG/PNG files at once (minimum ${MIN_FILES_BATCH} files) for web uploads, exams, and forms while maintaining quality.`;
+        return `Batch compress images to ${displaySize} or less. Reduce multiple JPG, PNG or WebP files at once (minimum ${MIN_FILES_BATCH} files) for web uploads, exams and forms.`;
       }
     }
 
     if (mode === "single") {
-      return "Precise image compression powered by PixSize — reduce any image to an exact file size in KB or MB while keeping it clear and usable.";
+      return "Reduce any image to an exact file size in KB or MB while keeping it clear and usable. Free, private and processed in your browser.";
     } else {
-      return `Batch image compression powered by PixSize — compress multiple images (minimum ${MIN_FILES_BATCH} files) to an exact file size in KB or MB while keeping them clear and usable.`;
+      return `Compress multiple images (minimum ${MIN_FILES_BATCH} files) to an exact file size in KB or MB while keeping them clear and usable.`;
     }
   };
 
@@ -488,11 +489,17 @@ export default function ImageCompressorTool({
     let maxQ = 1
     let currentBlob: Blob = file
     let iteration = 0
+    // Keep the largest result that fits; upload forms reject anything over the limit, so never return an oversized blob.
+    const attempts = { best: null as Blob | null, smallestSize: Infinity }
+    const keepIfFits = (blob: Blob) => {
+      attempts.smallestSize = Math.min(attempts.smallestSize, blob.size)
+      if (blob.size <= targetSizeBytes && (!attempts.best || blob.size > attempts.best.size)) attempts.best = blob
+    }
     
     while (iteration < 6) {
       if (signal?.aborted) throw new Error("Aborted")
       
-      onProgress((iteration / 6) * 100)
+      onProgress(Math.round((iteration / 6) * 100))
       try { 
         currentBlob = await compression(file, options) 
       } catch (e) { 
@@ -500,6 +507,7 @@ export default function ImageCompressorTool({
         console.error(e); 
         throw e 
       }
+      keepIfFits(currentBlob)
       
       if (currentBlob.size <= targetSizeBytes && currentBlob.size > targetSizeBytes * 0.85) break
       
@@ -515,11 +523,33 @@ export default function ImageCompressorTool({
       }
       iteration++
     }
+
+    // Quality alone could not reach the target: keep shrinking the dimensions at low quality.
+    let fallbackDimension = options.maxWidthOrHeight
+    while (!attempts.best && fallbackDimension > MIN_FALLBACK_DIMENSION) {
+      if (signal?.aborted) throw new Error("Aborted")
+      fallbackDimension = Math.floor(fallbackDimension * 0.7)
+      onProgress(95)
+      const blob: Blob = await compression(file, {
+        ...options,
+        maxWidthOrHeight: fallbackDimension,
+        initialQuality: Math.min(options.initialQuality, 0.5),
+      })
+      keepIfFits(blob)
+    }
     
     if (signal?.aborted) throw new Error("Aborted")
-    
+
+    const result = attempts.best
+    if (!result) {
+      const smallestKB = Math.ceil(attempts.smallestSize / 1024)
+      throw new Error(
+        `This image can't be compressed to ${targetKB} KB without losing too much detail. Try a target of at least ${smallestKB} KB${file.type === "image/png" ? ", or convert it to JPG first" : ""}.`
+      )
+    }
+
     onProgress(100)
-    return { blob: currentBlob, compressedSize: currentBlob.size }
+    return { blob: result, compressedSize: result.size }
   }
 
   // 处理单个文件
@@ -854,22 +884,8 @@ export default function ImageCompressorTool({
     processingIds.size === 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex flex-col">
-      <header className="border-b border-slate-200/60 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
-              <TargetIcon className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-semibold text-slate-900">PixSize</span>
-          </div>
-          <span className="text-xs text-slate-400 font-medium hidden sm:block">
-            {mode === "single" ? "Image Compression" : "Batch Image Compression"}
-          </span>
-        </div>
-      </header>
-
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-12">
+    <div className="flex flex-col">
+      <main className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-12">
         <div className="text-center mb-8 sm:mb-12">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-medium mb-4">
             <ZapIcon className="w-3 h-3" />
@@ -1317,15 +1333,6 @@ export default function ImageCompressorTool({
           </div>
         </div>
       </main>
-
-      {/* ✅ 性能优化：延迟加载 Popular Compressions 部分，减少初始 CLS */}
-      <LazyPopularCompressions />
-
-      <footer className="border-t border-slate-100 mt-auto">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 text-center text-xs text-slate-400">
-          © 2025 PixSize — Exact Size Image Compression Tools.
-        </div>
-      </footer>
     </div>
   )
 }
@@ -1457,97 +1464,3 @@ const FileItemCard = memo(({
 })
 
 FileItemCard.displayName = "FileItemCard"
-
-// ✅ 性能优化：延迟加载 Popular Compressions 部分，减少初始 CLS
-function LazyPopularCompressions() {
-  const [isVisible, setIsVisible] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!ref.current) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-          observer.disconnect()
-        }
-      },
-      { rootMargin: '100px' } // 提前 100px 开始加载
-    )
-
-    observer.observe(ref.current)
-    return () => observer.disconnect()
-  }, [])
-
-  return (
-    <div ref={ref} style={{ minHeight: isVisible ? 'auto' : '200px' }}>
-      {isVisible ? (
-        <section className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-12">
-          <h2 className="text-lg font-semibold text-slate-800 mb-6">
-            Popular Compressions
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
-            <div>
-              <h3 className="text-sm font-medium text-slate-700 mb-3">
-                Popular Sizes (Exact KB / MB)
-              </h3>
-              <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-sm">
-                {[
-                  "5KB", "8KB", "10KB", "15KB", "20KB", "30KB", "40KB", "50KB",
-                  "60KB", "70KB", "80KB", "90KB", "100KB", "150KB", "200KB", "250KB",
-                  "300KB", "400KB", "500KB", "600KB", "800KB", "900KB", "1MB", "2MB",
-                  "5MB", "10MB",
-                ].map((size, index, arr) => {
-                  const numericPart = parseInt(size)
-                  const unit = size.toLowerCase().includes("mb") ? "mb" : "kb"
-                  const href = `/compress-to-${numericPart}${unit}`
-
-                  return (
-                    <span key={size} className="inline-flex items-center">
-                      <a
-                        href={href}
-                        className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                      >
-                        {size}
-                      </a>
-                      {index < arr.length - 1 && (
-                        <span className="text-slate-300 mx-1.5">|</span>
-                      )}
-                    </span>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-medium text-slate-700 mb-3">
-                Popular Formats
-              </h3>
-              <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-sm">
-                {[
-                  { label: "JPG to 50KB", href: "/jpg-to-50kb" },
-                  { label: "PNG to 50KB", href: "/png-to-50kb" },
-                  { label: "Passport Photo Size", href: "/passport-photo-size" },
-                  { label: "Visa Photo Compressor", href: "/visa-photo-compressor" },
-                ].map((item, index, arr) => (
-                  <span key={item.label} className="inline-flex items-center">
-                    <a
-                      href={item.href}
-                      className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                    >
-                      {item.label}
-                    </a>
-                    {index < arr.length - 1 && (
-                      <span className="text-slate-300 mx-1.5">|</span>
-                    )}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      ) : null}
-    </div>
-  )
-}
