@@ -1,11 +1,10 @@
 import { Metadata } from "next";
 import ImageCompressorTool from "@/components/ImageCompressorTool";
-import { SITE_NAME, SITE_URL, buildPageMetadata, jsonLdScript } from "@/lib/site";
+import { SITE_FORMER_NAME, SITE_NAME, SITE_URL, buildPageMetadata, jsonLdScript } from "@/lib/site";
 
 export const metadata: Metadata = buildPageMetadata({
   title: `Compress Image to KB Online – Exact Size JPG, PNG & WebP | ${SITE_NAME}`,
-  description:
-    "Free online image compressor that reduces JPG, PNG and WebP images to an exact file size in KB or MB, such as 20KB, 50KB, 100KB or 200KB. Runs in your browser, no upload or signup.",
+  description: `${SITE_NAME} (formerly ${SITE_FORMER_NAME}) is a free online image compressor that reduces JPG, PNG and WebP images to an exact size in KB or MB, such as 20KB, 50KB or 200KB. Runs in your browser, no upload.`,
   path: "/",
   ogTitle: SITE_NAME,
   ogSize: "Compress Image to KB",
@@ -14,7 +13,7 @@ export const metadata: Metadata = buildPageMetadata({
 const FAQ_ITEMS = [
   {
     q: `What does ${SITE_NAME} do?`,
-    a: `${SITE_NAME} compresses JPG, PNG and WebP images to a file size you choose in KB or MB. Instead of a quality slider, you enter the limit you need, such as 50KB, and the tool lowers quality and, if needed, resolution until the file fits.`,
+    a: `${SITE_NAME}, formerly called ${SITE_FORMER_NAME}, compresses JPG, PNG and WebP images to a file size you choose in KB or MB. Instead of a quality slider, you enter the limit you need, such as 50KB, and the tool lowers quality and, if needed, resolution until the file fits.`,
   },
   {
     q: "When do I need an image under a specific KB size?",
@@ -39,6 +38,7 @@ export default function HomePage() {
     "@context": "https://schema.org",
     "@type": "WebApplication",
     name: SITE_NAME,
+    alternateName: SITE_FORMER_NAME,
     url: SITE_URL,
     applicationCategory: "MultimediaApplication",
     operatingSystem: "Any",
@@ -52,6 +52,7 @@ export default function HomePage() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: SITE_NAME,
+    alternateName: SITE_FORMER_NAME,
     url: SITE_URL,
   };
 

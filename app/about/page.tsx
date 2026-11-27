@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import LegalPage from "@/components/LegalPage";
-import { CONTACT_EMAIL, SITE_NAME, buildPageMetadata } from "@/lib/site";
+import { CONTACT_EMAIL, SITE_FORMER_NAME, SITE_NAME, buildPageMetadata } from "@/lib/site";
 
 export const metadata: Metadata = buildPageMetadata({
   title: `About ${SITE_NAME}`,
@@ -15,6 +15,10 @@ export default function AboutPage() {
       <p>
         {SITE_NAME} is a free online tool that compresses JPG, PNG and WebP images to the exact file size you need,
         such as 20KB, 50KB, 100KB or 1MB.
+      </p>
+      <p>
+        {SITE_NAME} was previously called {SITE_FORMER_NAME}. It is the same tool at the same address, with a name
+        that describes what it does.
       </p>
       <h2>Why we built it</h2>
       <p>
